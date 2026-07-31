@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Input;
 using WpfApp.Models;
 using WpfApp.Services;
+using WpfApp.Views;
 
 namespace WpfApp.ViewModels
 {
@@ -191,12 +192,14 @@ namespace WpfApp.ViewModels
                         }
                     }
 
-                    string msg = $"선택한 {targetFiles.Count}개 중 {successCount}개 파일이 성공적으로 내보내졌습니다.\n\n저장 경로: {targetFolder}";
-                    if (failCount > 0)
+                    Application.Current.Dispatcher.Invoke(() =>
                     {
-                        msg += $"\n(오류 발생: {failCount}개)";
-                    }
-                    MessageBox.Show(msg, "내보내기 완료", MessageBoxButton.OK, MessageBoxImage.Information);
+                        var dialog = new ExportCompleteDialog(successCount, targetFolder)
+                        {
+                            Owner = Application.Current.MainWindow
+                        };
+                        dialog.ShowDialog();
+                    });
                 }
             });
         }
