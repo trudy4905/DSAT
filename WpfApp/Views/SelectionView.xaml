@@ -1,0 +1,331 @@
+<UserControl x:Class="WpfApp.Views.SelectionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="880" d:DesignWidth="1440">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="56"/>  <!-- Top Clean White Header Bar -->
+            <RowDefinition Height="*"/>   <!-- Left Sidebar + Center Disk Grid -->
+            <RowDefinition Height="64"/>  <!-- Bottom Footer Bar -->
+        </Grid.RowDefinitions>
+
+        <!-- TOP COMMERCIAL WHITE HEADER BAR -->
+        <Border Grid.Row="0" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,0">
+            <Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Document Stegano Analysis" FontSize="16" FontWeight="Bold" Foreground="#0F172A"/>
+                    <Border Height="16" Width="1" Background="#E2E8F0" Margin="16,0"/>
+                    <TextBlock Text="분석 대상 디스크 또는 이미지 파일을 선택해 주세요" FontSize="14" Foreground="#475569" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Top Right Status Badge & Refresh -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <!-- Refresh Button -->
+                    <Button Command="{Binding RefreshDisksCommand}" Style="{StaticResource SecondaryBtn}" Margin="0,0,12,0" Padding="12,6" ToolTip="디스크 목록 새로고침"
+                            Visibility="{Binding IsDiskDevicesTabActive, Converter={StaticResource BoolToVisConverter}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔄" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="새로고침" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="12" Padding="10,4">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="7" Height="7" Fill="#16A34A" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="C++ Engine Active" FontSize="11" FontWeight="Bold" Foreground="#15803D"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- MIDDLE CONTENT: LEFT SIDEBAR TABS + MAIN CENTER DISK GRID -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="230"/> <!-- Left Sidebar -->
+                <ColumnDefinition Width="1"/>   <!-- Vertical Separator Line -->
+                <ColumnDefinition Width="*"/>   <!-- Center Disk Display Panel -->
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT SIDEBAR TAB NAVIGATION -->
+            <Border Grid.Column="0" Background="#F8FAFC" Padding="12,20">
+                <StackPanel>
+                    <!-- Tab 1: 디스크 장치 -->
+                    <Border Height="50" CornerRadius="8" Margin="0,0,0,6" Cursor="Hand">
+                        <Border.InputBindings>
+                            <MouseBinding MouseAction="LeftClick" Command="{Binding SelectSidebarTabCommand}" CommandParameter="0"/>
+                        </Border.InputBindings>
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsDiskDevicesTabActive}" Value="True">
+                                        <Setter Property="Background" Value="#FFFFFF"/>
+                                        <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True">
+                                        <Setter Property="Background" Value="#F1F5F9"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Grid Margin="16,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="💻" FontSize="16" Margin="0,0,10,0"/>
+                                <TextBlock Text="디스크 장치" FontSize="14" FontWeight="SemiBold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#64748B"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsDiskDevicesTabActive}" Value="True">
+                                                    <Setter Property="Foreground" Value="#3B82F6"/>
+                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Tab 2: 이미지 파일 -->
+                    <Border Height="50" CornerRadius="8" Margin="0,0,0,6" Cursor="Hand">
+                        <Border.InputBindings>
+                            <MouseBinding MouseAction="LeftClick" Command="{Binding SelectSidebarTabCommand}" CommandParameter="1"/>
+                        </Border.InputBindings>
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsImageFilesTabActive}" Value="True">
+                                        <Setter Property="Background" Value="#FFFFFF"/>
+                                        <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True">
+                                        <Setter Property="Background" Value="#F1F5F9"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Grid Margin="16,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="💾" FontSize="16" Margin="0,0,10,0"/>
+                                <TextBlock Text="이미지 파일" FontSize="14" FontWeight="SemiBold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#64748B"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsImageFilesTabActive}" Value="True">
+                                                    <Setter Property="Foreground" Value="#3B82F6"/>
+                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- VERTICAL SEPARATOR LINE -->
+            <Rectangle Grid.Column="1" Fill="#E2E8F0"/>
+
+            <!-- CENTER DISK DISPLAY PANEL (Clean & Modern Layout) -->
+            <ScrollViewer Grid.Column="2" Background="#FAFBFD" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="32,28">
+
+                    <!-- ItemsControl Grid for Disk Devices (Tab 0) -->
+                    <ItemsControl ItemsSource="{Binding DiskDevicesList}" Visibility="{Binding IsDiskDevicesTabActive, Converter={StaticResource BoolToVisConverter}}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Width="360" Height="210" Margin="0,0,24,24" CornerRadius="14" Padding="22" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" 
+                                                      Command="{Binding DataContext.SelectDiskCardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                      CommandParameter="{Binding}"/>
+                                    </Border.InputBindings>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#FFFFFF"/>
+                                            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                                            <Setter Property="BorderThickness" Value="1"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                    <Setter Property="BorderBrush" Value="#2563EB"/>
+                                                    <Setter Property="BorderThickness" Value="2"/>
+                                                    <Setter Property="Background" Value="#F0F7FF"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True">
+                                                    <Setter Property="Background" Value="#FFFFFF"/>
+                                                    <Setter Property="BorderBrush" Value="#93C5FD"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Card Header: VolumeLabel as-is (Badge Removed) -->
+                                        <Grid Grid.Row="0">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Border Width="44" Height="44" CornerRadius="10" Background="#F1F5F9" Margin="0,0,14,0">
+                                                    <TextBlock Text="{Binding IconSymbol}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <TextBlock Text="{Binding VolumeLabel}" FontSize="16" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- Usage Progress Bar (Standard Disk Card Only) -->
+                                        <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,16,0,0" Visibility="{Binding IsStandardCard, Converter={StaticResource BoolToVisConverter}}">
+                                            <Grid Margin="0,0,0,6">
+                                                <TextBlock Text="디스크 용량 사용률" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
+                                                <TextBlock Text="{Binding CapacityFormatted, StringFormat='전체 {0}'}" FontSize="11" FontWeight="Bold" Foreground="#334155" HorizontalAlignment="Right"/>
+                                            </Grid>
+                                            <ProgressBar Height="8" Value="{Binding UsagePercentage, Mode=OneWay}" Maximum="100" Background="#E2E8F0" Foreground="#2563EB" BorderThickness="0"/>
+                                            <Grid Margin="0,6,0,0">
+                                                <TextBlock Text="{Binding FreeSpaceFormatted, StringFormat='여유: {0}'}" FontSize="11" FontWeight="SemiBold" Foreground="#16A34A"/>
+                                                <TextBlock Text="{Binding UsagePercentage, StringFormat='{}{0:F1}% 사용중'}" FontSize="11" Foreground="#64748B" HorizontalAlignment="Right"/>
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <!-- Card Footer: Serial Number Only -->
+                                        <Border Grid.Row="2" BorderBrush="#F1F5F9" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,12,0,0">
+                                            <Grid>
+                                                <TextBlock Text="{Binding SerialNumber, StringFormat='일련번호: {0}'}" FontSize="11" FontWeight="Medium" Foreground="#64748B" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- ItemsControl Grid for Image Files (Tab 1 - Color & Design Matched 100%) -->
+                    <ItemsControl ItemsSource="{Binding ImageFilesList}" Visibility="{Binding IsImageFilesTabActive, Converter={StaticResource BoolToVisConverter}}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Width="360" Height="210" Margin="0,0,24,24" CornerRadius="14" Padding="22" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" 
+                                                      Command="{Binding DataContext.SelectDiskCardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                      CommandParameter="{Binding}"/>
+                                    </Border.InputBindings>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#FFFFFF"/>
+                                            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                                            <Setter Property="BorderThickness" Value="1"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                    <Setter Property="BorderBrush" Value="#2563EB"/>
+                                                    <Setter Property="BorderThickness" Value="2"/>
+                                                    <Setter Property="Background" Value="#F0F7FF"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsAddCard}" Value="True">
+                                                    <Setter Property="BorderBrush" Value="#93C5FD"/>
+                                                    <Setter Property="BorderThickness" Value="2"/>
+                                                    <Setter Property="Background" Value="#FAFBFD"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True">
+                                                    <Setter Property="Background" Value="#FFFFFF"/>
+                                                    <Setter Property="BorderBrush" Value="#93C5FD"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Card Header: VolumeLabel as-is (Badge Removed) -->
+                                        <Grid Grid.Row="0">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Border Width="44" Height="44" CornerRadius="10" Background="#F1F5F9" Margin="0,0,14,0">
+                                                    <TextBlock Text="{Binding IconSymbol}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <TextBlock Text="{Binding VolumeLabel}" FontSize="16" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- Image File Details Body (Standard Card) -->
+                                        <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,14,0,0" Visibility="{Binding IsStandardCard, Converter={StaticResource BoolToVisConverter}}">
+                                            <Grid Margin="0,0,0,4">
+                                                <TextBlock Text="종류" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
+                                                <TextBlock Text="{Binding ImageFormatName}" FontSize="11" FontWeight="Bold" Foreground="#0F172A" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
+                                            </Grid>
+                                            <Grid Margin="0,0,0,4">
+                                                <TextBlock Text="용량" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
+                                                <TextBlock Text="{Binding CapacityFormatted, StringFormat='전체 {0}'}" FontSize="11" FontWeight="Bold" Foreground="#2563EB" HorizontalAlignment="Right"/>
+                                            </Grid>
+                                            <Grid Margin="0,0,0,0">
+                                                <TextBlock Text="파티션" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
+                                                <TextBlock Text="{Binding PartitionInfoFormatted}" FontSize="11" FontWeight="Bold" Foreground="#16A34A" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <!-- Image File Details Body (Add Card: E01, Ex01, dd only) -->
+                                        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,12,0,0" Visibility="{Binding IsAddCard, Converter={StaticResource BoolToVisConverter}}">
+                                            <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="8" Padding="14,6">
+                                                <TextBlock Text="E01, Ex01, dd" FontSize="12" FontWeight="Bold" Foreground="#2563EB" HorizontalAlignment="Center"/>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- Card Footer: Serial Number / Action -->
+                                        <Border Grid.Row="2" BorderBrush="#F1F5F9" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,10,0,0">
+                                            <Grid>
+                                                <TextBlock Text="{Binding SerialNumber, StringFormat='일련번호: {0}'}" FontSize="11" FontWeight="Medium" Foreground="#64748B" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                           Visibility="{Binding IsStandardCard, Converter={StaticResource BoolToVisConverter}}"/>
+                                                <TextBlock Text="클릭하여 파일 선택" FontSize="11" FontWeight="Bold" Foreground="#2563EB" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                           Visibility="{Binding IsAddCard, Converter={StaticResource BoolToVisConverter}}"/>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- BOTTOM COMMERCIAL FOOTER BAR -->
+        <Border Grid.Row="2" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0">
+            <Grid>
+                <!-- Bottom Left Selected Disk Text -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="24,0,0,0">
+                    <TextBlock Text="선택: " FontSize="13" Foreground="#64748B"/>
+                    <TextBlock Text="{Binding SelectedDisk.VolumeLabel}" FontSize="13" FontWeight="Bold" Foreground="#2563EB"/>
+                </StackPanel>
+
+                <!-- Bottom Right "다음" Button -->
+                <Button Content="다음" Command="{Binding GoToNextStepCommand}" 
+                        Style="{StaticResource DessFooterBtn}" HorizontalAlignment="Right" VerticalAlignment="Center" 
+                        Margin="0,0,24,0"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,39 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run (Release, No Debug)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-release",
+            "program": "${workspaceFolder}/WpfApp/bin/x64/Release/net10.0-windows/WpfApp.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/WpfApp/bin/x64/Release/net10.0-windows",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+
+        },
+        {
+            "name": "Debug (Release)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-release",
+            "program": "${workspaceFolder}/WpfApp/bin/x64/Release/net10.0-windows/WpfApp.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/WpfApp/bin/x64/Release/net10.0-windows",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        },
+        {
+            "name": "Debug (Debug build)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-debug",
+            "program": "${workspaceFolder}/WpfApp/bin/x64/Debug/net10.0-windows/WpfApp.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/WpfApp/bin/x64/Debug/net10.0-windows",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        }
+    ]
+}

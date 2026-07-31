@@ -1,0 +1,15 @@
+# Visual Studio & .NET Build Artifacts
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Native C++ Compiled Binaries
+*.obj
+*.lib
+*.exp
+*.pdb
+NativeEngine/NativeEngine.dll

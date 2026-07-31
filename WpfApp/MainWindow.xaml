@@ -1,0 +1,34 @@
+<Window x:Class="WpfApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfApp"
+        xmlns:viewmodels="clr-namespace:WpfApp.ViewModels"
+        xmlns:views="clr-namespace:WpfApp.Views"
+        mc:Ignorable="d"
+        Title="DSAT v1.0.0" Icon="Resources/app_icon.png" Height="880" Width="1440" MinWidth="1200" MinHeight="800"
+        WindowStartupLocation="CenterScreen" Background="#F1F5F9" FontFamily="Malgun Gothic, Segoe UI">
+
+    <Window.DataContext>
+        <viewmodels:MainViewModel/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <!-- DataTemplates mapping ViewModels to Views -->
+        <DataTemplate DataType="{x:Type viewmodels:SelectionViewModel}">
+            <views:SelectionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:ScanResultViewModel}">
+            <views:ScanResultView />
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <!-- Main Content Area: Automatically resolves to SelectionView or ScanResultView based on CurrentViewModel -->
+        <ContentControl Content="{Binding CurrentViewModel}" />
+
+        <!-- Overlay for Scanning Progress -->
+        <views:ScanOverlayView Panel.ZIndex="100" />
+    </Grid>
+</Window>
