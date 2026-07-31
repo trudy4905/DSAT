@@ -297,6 +297,7 @@ namespace WpfApp.ViewModels
 
             IEnumerable<HwpFileItem> sorted = _currentSortColumn switch
             {
+                "IsSelectedForExport" => _isSortAscending ? filtered.OrderByDescending(x => x.IsSelectedForExport).ThenBy(x => x.FileName) : filtered.OrderBy(x => x.IsSelectedForExport).ThenBy(x => x.FileName),
                 "StatusText" => _isSortAscending ? filtered.OrderBy(x => x.RiskLevel).ThenBy(x => x.StatusText) : filtered.OrderByDescending(x => x.RiskLevel).ThenByDescending(x => x.StatusText),
                 "FileSizeBytes" => _isSortAscending ? filtered.OrderBy(x => x.FileSizeBytes) : filtered.OrderByDescending(x => x.FileSizeBytes),
                 "Extension" => _isSortAscending ? filtered.OrderBy(x => x.Extension) : filtered.OrderByDescending(x => x.Extension),
