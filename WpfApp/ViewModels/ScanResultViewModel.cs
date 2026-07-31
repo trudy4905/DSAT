@@ -201,6 +201,16 @@ namespace WpfApp.ViewModels
             });
         }
 
+        public string SelectedExportCountText
+        {
+            get
+            {
+                int total = FilteredFileList.Count;
+                int selected = FilteredFileList.Count(x => x.IsSelectedForExport);
+                return $"선택된 문서: {selected:N0} / {total:N0}개";
+            }
+        }
+
         public bool? IsAllSelectedForExport
         {
             get
@@ -220,6 +230,7 @@ namespace WpfApp.ViewModels
                         item.IsSelectedForExport = value.Value;
                     }
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(SelectedExportCountText));
                 }
             }
         }
@@ -268,6 +279,7 @@ namespace WpfApp.ViewModels
             }
 
             OnPropertyChanged(nameof(IsAllSelectedForExport));
+            OnPropertyChanged(nameof(SelectedExportCountText));
         }
 
         private void Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -275,6 +287,7 @@ namespace WpfApp.ViewModels
             if (e.PropertyName == nameof(HwpFileItem.IsSelectedForExport))
             {
                 OnPropertyChanged(nameof(IsAllSelectedForExport));
+                OnPropertyChanged(nameof(SelectedExportCountText));
             }
         }
 
@@ -311,6 +324,8 @@ namespace WpfApp.ViewModels
             OnPropertyChanged(nameof(HwpCount));
             OnPropertyChanged(nameof(HwpxCount));
             OnPropertyChanged(nameof(PdfCount));
+            OnPropertyChanged(nameof(IsAllSelectedForExport));
+            OnPropertyChanged(nameof(SelectedExportCountText));
         }
 
         public int HwpCount => FileList.Count(x => x.Extension.Equals(".hwp", StringComparison.OrdinalIgnoreCase));
