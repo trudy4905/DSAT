@@ -74,14 +74,6 @@ namespace WpfApp.Services
         color: #334155;
         word-break: break-all;
     }}
-    .doc-footer {{
-        margin-top: 60px;
-        padding-top: 20px;
-        border-top: 1px solid #F1F5F9;
-        text-align: center;
-        font-size: 11.5px;
-        color: #94A3B8;
-    }}
 </style>
 </head>
 <body>
@@ -91,9 +83,6 @@ namespace WpfApp.Services
         </div>
         <div class='doc-body-content'>
             {safeContent}
-        </div>
-        <div class='doc-footer'>
-            DSAT Forensic Document Viewer • 정적 격리 모드
         </div>
     </div>
 </body>
