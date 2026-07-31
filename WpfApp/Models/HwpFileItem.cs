@@ -71,6 +71,21 @@ namespace WpfApp.Models
             }
         }
 
+        private bool _isSelectedForExport = false;
+
+        public bool IsSelectedForExport
+        {
+            get => _isSelectedForExport;
+            set
+            {
+                if (_isSelectedForExport != value)
+                {
+                    _isSelectedForExport = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public int RiskLevel
         {
             get => _riskLevel;
@@ -81,6 +96,10 @@ namespace WpfApp.Models
                     _riskLevel = value;
                     OnPropertyChanged();
                     UpdateStatusBadgeColor();
+                    if (_riskLevel > 0)
+                    {
+                        IsSelectedForExport = true;
+                    }
                 }
             }
         }
@@ -94,6 +113,10 @@ namespace WpfApp.Models
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(HasFindings));
                 OnPropertyChanged(nameof(FindingCountText));
+                if (HasFindings)
+                {
+                    IsSelectedForExport = true;
+                }
             }
         }
 

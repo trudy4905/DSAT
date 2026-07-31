@@ -136,6 +136,21 @@
                         </DataGrid.Resources>
 
                         <DataGrid.Columns>
+                            <!-- 0. 선택 체크박스 (Selection CheckBox) -->
+                            <DataGridTemplateColumn Width="46" CanUserSort="False">
+                                <DataGridTemplateColumn.Header>
+                                    <CheckBox IsChecked="{Binding DataContext.IsAllSelectedForExport, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}" 
+                                              HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                              ToolTip="전체 선택 / 해제"/>
+                                </DataGridTemplateColumn.Header>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsSelectedForExport, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
                             <!-- 1. 번호 (Index - Non-sortable) -->
                             <DataGridTemplateColumn Header="번호" Width="60" CanUserSort="False" SortMemberPath="Index">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -342,7 +357,7 @@
                     <!-- Row 2: Action Buttons -->
                     <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,12">
                         <Button Content="📂 폴더 열기" Command="{Binding OpenFolderCommand}" Style="{StaticResource SecondaryBtn}" Margin="0,0,8,0"/>
-                        <Button Content="📄 파일 열기" Command="{Binding OpenFileCommand}" Style="{StaticResource DessFooterBtn}" Padding="14,4" Margin="0"/>
+                        <Button Content="📄 안전 복사본 열기" Command="{Binding OpenFileCommand}" Style="{StaticResource DessFooterBtn}" Padding="14,4" Margin="0"/>
                     </StackPanel>
 
                     <!-- Row 3: Unified WebView2 Document Viewer Component -->
@@ -372,9 +387,11 @@
                         Style="{StaticResource SecondaryBtn}" HorizontalAlignment="Left" VerticalAlignment="Center" 
                         Margin="20,10,0,10" Padding="14,5"/>
 
-                <!-- Bottom Right: Total file count summary label -->
+                <!-- Bottom Right: Rescan & Export Buttons + Summary -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,24,0">
-                    <TextBlock Text="{Binding FilteredFileList.Count, StringFormat='총 {0:N0}개 문서'}" FontSize="13" FontWeight="Bold" Foreground="#3B82F6"/>
+                    <TextBlock Text="{Binding FilteredFileList.Count, StringFormat='총 {0:N0}개 문서'}" FontSize="13" FontWeight="Bold" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                    <Button Content="🔄 다시 검사하기" Command="{Binding RefreshScanCommand}" Style="{StaticResource SecondaryBtn}" Padding="12,5" Margin="0,0,8,0"/>
+                    <Button Content="📤 선택 파일 내보내기" Command="{Binding ExportSelectedFilesCommand}" Style="{StaticResource DessFooterBtn}" Background="#059669" BorderBrush="#047857" Padding="16,5" Margin="0"/>
                 </StackPanel>
             </Grid>
         </Border>

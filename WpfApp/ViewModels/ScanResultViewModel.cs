@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -144,6 +145,83 @@ namespace WpfApp.ViewModels
 
             GoToPreviousStepCommand = new RelayCommand(_ => RequestGoBack?.Invoke(this, EventArgs.Empty));
             RefreshScanCommand = new RelayCommand(_ => RequestRefreshScan?.Invoke(this, EventArgs.Empty));
+
+            ExportSelectedFilesCommand = new RelayCommand(_ =>
+            {
+                var targetFiles = FilteredFileList.Where(x => x.IsSelectedForExport && File.Exists(x.FilePath)).ToList();
+                if (targetFiles.Count == 0)
+                {
+                    MessageBox.Show("내보낼 선택된 파일이 없습니다. 리스트에서 체크박스를 선택해 주세요.", "안내", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                var dialog = new Microsoft.Win32.OpenFolderDialog
+                {
+                    Title = "선택된 포렌식 파일 내보낼 저장 폴더 선택"
+                };
+
+                if (dialog.ShowDialog() == true)
+                {
+                    string targetFolder = dialog.FolderName;
+                    int successCount = 0;
+                    int failCount = 0;
+
+                    foreach (var file in targetFiles)
+                    {
+                        try
+                        {
+                            string destFileName = file.FileName;
+                            string destPath = Path.Combine(targetFolder, destFileName);
+
+                            int counter = 1;
+                            string fileNoExt = Path.GetFileNameWithoutExtension(destFileName);
+                            string ext = Path.GetExtension(destFileName);
+
+                            while (File.Exists(destPath))
+                            {
+                                destPath = Path.Combine(targetFolder, $"{fileNoExt}_{counter++}{ext}");
+                            }
+
+                            File.Copy(file.FilePath, destPath, overwrite: true);
+                            successCount++;
+                        }
+                        catch
+                        {
+                            failCount++;
+                        }
+                    }
+
+                    string msg = $"선택한 {targetFiles.Count}개 중 {successCount}개 파일이 성공적으로 내보내졌습니다.\n\n저장 경로: {targetFolder}";
+                    if (failCount > 0)
+                    {
+                        msg += $"\n(오류 발생: {failCount}개)";
+                    }
+                    MessageBox.Show(msg, "내보내기 완료", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            });
+        }
+
+        public bool? IsAllSelectedForExport
+        {
+            get
+            {
+                if (FilteredFileList.Count == 0) return false;
+                int count = FilteredFileList.Count(x => x.IsSelectedForExport);
+                if (count == FilteredFileList.Count) return true;
+                if (count == 0) return false;
+                return null;
+            }
+            set
+            {
+                if (value.HasValue)
+                {
+                    foreach (var item in FilteredFileList)
+                    {
+                        item.IsSelectedForExport = value.Value;
+                    }
+                    OnPropertyChanged();
+                }
+            }
         }
 
         #region Commands
@@ -153,6 +231,7 @@ namespace WpfApp.ViewModels
         public ICommand CopyTextCommand { get; }
         public ICommand GoToPreviousStepCommand { get; }
         public ICommand RefreshScanCommand { get; }
+        public ICommand ExportSelectedFilesCommand { get; }
         #endregion
 
         #region Search and Filtering
@@ -170,9 +249,15 @@ namespace WpfApp.ViewModels
 
         public void InitializeResults(IEnumerable<HwpFileItem> results)
         {
+            foreach (var item in FileList)
+            {
+                item.PropertyChanged -= Item_PropertyChanged;
+            }
+
             FileList.Clear();
             foreach (var item in results)
             {
+                item.PropertyChanged += Item_PropertyChanged;
                 FileList.Add(item);
             }
             ApplyFileFilter();
@@ -180,6 +265,16 @@ namespace WpfApp.ViewModels
             if (FilteredFileList.Count > 0)
             {
                 SelectedFile = FilteredFileList.First();
+            }
+
+            OnPropertyChanged(nameof(IsAllSelectedForExport));
+        }
+
+        private void Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(HwpFileItem.IsSelectedForExport))
+            {
+                OnPropertyChanged(nameof(IsAllSelectedForExport));
             }
         }
 
