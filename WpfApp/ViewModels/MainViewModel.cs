@@ -24,7 +24,7 @@ namespace WpfApp.ViewModels
         private bool _isEngineInitialized;
         private int _coreCount;
         private CancellationTokenSource? _scanCts;
-        private readonly HwpFileScannerService _scannerService = new HwpFileScannerService();
+        private readonly DocumentFileScannerService _scannerService = new DocumentFileScannerService();
 
         public MainViewModel()
         {

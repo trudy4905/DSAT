@@ -24,7 +24,7 @@
                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding SelectedDisk.VolumeLabel}" FontSize="14" FontWeight="Bold" Foreground="#3B82F6"/>
-                        <TextBlock Text="{Binding ScanProgressText, StringFormat=' - ({0})'}" FontSize="13" Foreground="#16A34A" Margin="12,0,0,0"/>
+                        <TextBlock Text="{Binding ScanProgressText, StringFormat='- ({0})'}" FontSize="13" Foreground="#16A34A" Margin="12,0,0,0"/>
                     </StackPanel>
                 </StackPanel>
 
