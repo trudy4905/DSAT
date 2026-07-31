@@ -25,8 +25,8 @@ namespace WpfApp.Services.Evaluators
 
                 findings.Add(new DetectionFindingItem
                 {
-                    Title = "EOF 은닉 데이터 발견 (Overlay Data)",
-                    Description = $"정식 문서 구조 마감 오프셋 뒤에 {overlayStr} 크기의 비인가 잉여 오버레이 바이너리가 은닉되어 있습니다.",
+                    Title = "데이터 오버레이 탐지",
+                    Description = $"문서 마지막 오프셋 뒤에 {overlayStr} 크기의 데이터 발견",
                     RiskLevel = 2 // Danger (Red)
                 });
             }
@@ -36,12 +36,12 @@ namespace WpfApp.Services.Evaluators
             if (findings.Count > 1)
             {
                 item.RiskLevel = 3; // Critical (Purple)
-                item.StatusText = $"복합 위험 ({findings.Count}건)";
+                item.StatusText = $"위험 ({findings.Count}건)";
             }
             else if (findings.Count == 1)
             {
                 item.RiskLevel = findings[0].RiskLevel;
-                item.StatusText = string.IsNullOrWhiteSpace(analysis.StatusMessage) ? "EOF 은닉 탐지" : analysis.StatusMessage;
+                item.StatusText = string.IsNullOrWhiteSpace(analysis.StatusMessage) ? "EOF" : analysis.StatusMessage;
             }
             else
             {

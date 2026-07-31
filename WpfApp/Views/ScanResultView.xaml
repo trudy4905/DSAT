@@ -166,9 +166,7 @@
                             <DataGridTemplateColumn Header="확장자" Width="85" SortMemberPath="Extension">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Border CornerRadius="4" Padding="6,2" Background="{Binding BadgeColor}" HorizontalAlignment="Center">
-                                            <TextBlock Text="{Binding FileTypeBadge}" Foreground="#FFFFFF" FontWeight="Bold" FontSize="10"/>
-                                        </Border>
+                                        <TextBlock Text="{Binding Extension}" FontSize="12" Foreground="#475569" HorizontalAlignment="Center"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

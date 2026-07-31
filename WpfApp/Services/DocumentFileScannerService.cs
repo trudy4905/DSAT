@@ -231,7 +231,7 @@ namespace WpfApp.Services
                 }
                 else
                 {
-                    item.StatusText = "분석 실패";
+                    item.StatusText = "실패";
                     item.RiskLevel = 1;
                 }
             }
