@@ -110,7 +110,7 @@ namespace WpfApp.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"안전 복사본 파일 열기 실패: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show($"파일 열기 실패: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }, _ => SelectedFile != null && File.Exists(SelectedFile?.FilePath));
@@ -165,7 +165,7 @@ namespace WpfApp.ViewModels
 
                 var dialog = new Microsoft.Win32.OpenFolderDialog
                 {
-                    Title = "선택된 포렌식 파일 내보낼 저장 폴더 선택"
+                    Title = "내보낼 저장 폴더 선택"
                 };
 
                 if (dialog.ShowDialog() == true)

@@ -42,10 +42,10 @@
 
             <!-- Footer Buttons -->
             <Border Grid.Row="2" Background="#F8FAFC" CornerRadius="0,0,11,11" Padding="16,12">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button x:Name="BtnOpenFolder" Content="📂 폴더 열기" Click="OpenFolder_Click" Style="{StaticResource DessFooterBtn}" Background="#10B981" BorderBrush="#059669" Padding="16,6" Margin="0,0,8,0"/>
-                    <Button Content="닫기" Click="CloseButton_Click" Style="{StaticResource SecondaryBtn}" Padding="16,6" Margin="0"/>
-                </StackPanel>
+                <Grid>
+                    <Button x:Name="BtnOpenFolder" Content="📂 폴더 열기" Click="OpenFolder_Click" Style="{StaticResource DessFooterBtn}" Padding="16,6" HorizontalAlignment="Left"/>
+                    <Button Content="닫기" Click="CloseButton_Click" Style="{StaticResource SecondaryBtn}" Padding="16,6" HorizontalAlignment="Right"/>
+                </Grid>
             </Border>
         </Grid>
     </Border>

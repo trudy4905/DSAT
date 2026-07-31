@@ -43,7 +43,7 @@ namespace WpfApp.Services.DocumentReaders
                                         ContentText = prvContent,
                                         LineCount = lines,
                                         CharCount = prvContent.Length,
-                                        FormatType = "HWPX Document",
+                                        FormatType = "HWPX",
                                         Success = true
                                     };
                                 }

@@ -231,8 +231,8 @@ namespace WpfApp.ViewModels
         {
             var dlg = new OpenFileDialog
             {
-                Title = "분석할 문서 파일 선택 (HWP, HWPX, PDF)",
-                Filter = "모든 분석 대상 문서 (*.hwp;*.hwpx;*.pdf)|*.hwp;*.hwpx;*.pdf|HWP 문서 (*.hwp)|*.hwp|HWPX 문서 (*.hwpx)|*.hwpx|PDF 문서 (*.pdf)|*.pdf|모든 파일 (*.*)|*.*",
+                Title = "문서 파일 선택 (HWP, HWPX, PDF)",
+                Filter = "문서 파일(*.hwp;*.hwpx;*.pdf)|*.hwp;*.hwpx;*.pdf|HWP 문서 (*.hwp)|*.hwp|HWPX 문서 (*.hwpx)|*.hwpx|PDF 문서 (*.pdf)|*.pdf|모든 파일 (*.*)|*.*",
                 Multiselect = true
             };
 
@@ -299,8 +299,8 @@ namespace WpfApp.ViewModels
         {
             var openFileDialog = new OpenFileDialog
             {
-                Title = "EnCase 포렌식 또는 RAW 디스크 이미지 선택",
-                Filter = "Disk Image Files (*.E01;*.Ex01;*.raw;*.dd;*.img;*.iso;*.vhd;*.vmdk)|*.E01;*.Ex01;*.raw;*.dd;*.img;*.iso;*.vhd;*.vmdk|EnCase Image (*.E01;*.Ex01)|*.E01;*.Ex01|RAW Disk Image (*.raw;*.dd;*.img)|*.raw;*.dd;*.img|All Files (*.*)|*.*",
+                Title = "이미지 파일 선택",
+                Filter = "Disk Image Files (*.E01;*.Ex01;*.dd)|*.E01;*.Ex01;*.dd|EnCase Image (*.E01;*.Ex01)|*.E01;*.Ex01|RAW Disk Image (*.dd)|*.dd|All Files (*.*)|*.*",
                 Multiselect = false
             };
 

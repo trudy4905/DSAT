@@ -68,20 +68,6 @@ namespace WpfApp.Services
         font-weight: 700;
         letter-spacing: 0.5px;
     }}
-    .meta-info-box {{
-        background-color: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 6px;
-        padding: 12px 16px;
-        margin-bottom: 32px;
-        font-size: 12.5px;
-        color: #64748B;
-        display: flex;
-        gap: 24px;
-    }}
-    .meta-item strong {{
-        color: #334155;
-    }}
     .doc-body-content {{
         font-size: 14.5px;
         line-height: 1.85;
@@ -102,11 +88,6 @@ namespace WpfApp.Services
     <div class='paper-sheet'>
         <div class='doc-header-bar'>
             <div class='doc-title'>📄 {safeTitle}</div>
-            <div class='doc-badge'>{safeFormat}</div>
-        </div>
-        <div class='meta-info-box'>
-            <div class='meta-item'>파일 크기: <strong>{safeSize}</strong></div>
-            <div class='meta-item'>수정 일시: <strong>{safeModified}</strong></div>
         </div>
         <div class='doc-body-content'>
             {safeContent}

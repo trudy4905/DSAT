@@ -38,7 +38,7 @@ bool PdfDocumentAnalyzer::Analyze(FILE* fp, uint64_t fileSize, DocumentAnalysisR
     // %%EOF 역방향 탐색 (PDF 스펙: 퍼센트 2개 + EOF)
     // 증분 저장(Incremental Update) PDF는 %%EOF가 여러 개 있을 수 있음 → 마지막 것이 진짜 논리 끝
     int foundIdx = -1;
-    for (int i = static_cast<int>(readBytes) - 6; i >= 0; --i) {
+    for (int i = static_cast<int>(readBytes) - 5; i >= 0; --i) {
         if (buffer[i]   == '%' && buffer[i+1] == '%' &&
             buffer[i+2] == 'E' && buffer[i+3] == 'O' && buffer[i+4] == 'F') {
             foundIdx = i;
@@ -53,18 +53,18 @@ bool PdfDocumentAnalyzer::Analyze(FILE* fp, uint64_t fileSize, DocumentAnalysisR
     }
 
     // %%EOF 이후 허용 가능한 후행 바이트:
-    // PDF 스펙 상 %%EOF 뒤에 최대 2개의 개행(\r, \n) 허용
-    // 그 외 공백/탭도 관대하게 허용 (일부 생성기가 추가)
-    uint64_t eofOffset = (fileSize - checkLen) + foundIdx + 5; // %%EOF = 5글자
-    while (eofOffset < fileSize) {
-        if (_fseeki64(fp, (long long)eofOffset, SEEK_SET) != 0) break;
-        int ch = fgetc(fp);
-        if (ch == '\r' || ch == '\n' || ch == ' ' || ch == '\t') {
-            eofOffset++;
+    // PDF 스펙 상 %%EOF 뒤에 개행(\r, \n) 허용, 공백/탭 및 널 바이트(\0) 패딩 추가 허용 (오탐 방지)
+    size_t padIdx = foundIdx + 5;
+    while (padIdx < readBytes) {
+        uint8_t ch = buffer[padIdx];
+        if (ch == '\r' || ch == '\n' || ch == ' ' || ch == '\t' || ch == '\0') {
+            padIdx++;
         } else {
             break;
         }
     }
+
+    uint64_t eofOffset = (fileSize - checkLen) + padIdx;
 
     FormatResult(fileSize, eofOffset, outResult);
     return true;

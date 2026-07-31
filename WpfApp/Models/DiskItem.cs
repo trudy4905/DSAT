@@ -57,7 +57,7 @@ namespace WpfApp.Models
         {
             get
             {
-                if (string.IsNullOrEmpty(ImageTypeTag)) return "포렌식 이미지 파일";
+                if (string.IsNullOrEmpty(ImageTypeTag)) return "이미지 파일";
                 string tagUpper = ImageTypeTag.ToUpperInvariant();
                 return tagUpper switch
                 {
