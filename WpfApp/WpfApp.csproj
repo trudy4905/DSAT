@@ -24,5 +24,6 @@
 
 <ItemGroup>
     <PackageReference Include="System.Management" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
   </ItemGroup>
 </Project>

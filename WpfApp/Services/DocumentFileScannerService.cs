@@ -241,27 +241,37 @@ namespace WpfApp.Services
                 item.RiskLevel = 1;
             }
 
-            // 3) 비동기 텍스트 미리보기 가공
-            _ = Task.Run(async () =>
+            // 3) 한글 파일(.hwp, .hwpx)만 리스트 본문 요약 수집, 나머지는 "- "
+            bool isHwpFile = item.Extension.Equals(".hwp", StringComparison.OrdinalIgnoreCase) ||
+                             item.Extension.Equals(".hwpx", StringComparison.OrdinalIgnoreCase);
+
+            if (isHwpFile)
             {
-                try
+                _ = Task.Run(async () =>
                 {
-                    var preview = await HwpPreviewService.ExtractTextAsync(item.FilePath);
-                    if (preview.Success && !string.IsNullOrWhiteSpace(preview.ContentText))
+                    try
                     {
-                        string cleanText = preview.ContentText.Replace("\r", " ").Replace("\n", " ");
-                        item.TextSnippet = cleanText.Length > 80 ? cleanText.Substring(0, 80) + "..." : cleanText;
+                        var preview = await DocumentPreviewService.ExtractTextAsync(item.FilePath);
+                        if (preview.Success && !string.IsNullOrWhiteSpace(preview.ContentText))
+                        {
+                            string cleanText = preview.ContentText.Replace("\r", " ").Replace("\n", " ");
+                            item.TextSnippet = cleanText.Length > 80 ? cleanText.Substring(0, 80) + "..." : cleanText;
+                        }
+                        else
+                        {
+                            item.TextSnippet = "(본문 내용 없음)";
+                        }
                     }
-                    else
+                    catch
                     {
-                        item.TextSnippet = "(본문 내용 없음)";
+                        item.TextSnippet = "(본문 요약 실패)";
                     }
-                }
-                catch
-                {
-                    item.TextSnippet = "(본문 요약 실패)";
-                }
-            });
+                });
+            }
+            else
+            {
+                item.TextSnippet = "- ";
+            }
         }
         #endregion
     }

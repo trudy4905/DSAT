@@ -10,8 +10,7 @@
             "args": [],
             "cwd": "${workspaceFolder}/WpfApp/bin/x64/Release/net10.0-windows",
             "stopAtEntry": false,
-            "console": "internalConsole",
-
+            "console": "internalConsole"
         },
         {
             "name": "Debug (Release)",

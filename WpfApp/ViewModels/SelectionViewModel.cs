@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -12,12 +13,15 @@ namespace WpfApp.ViewModels
 {
     public class SelectionViewModel : ObservableObject
     {
-        private int _selectedSidebarTab = 0; // 0 = 디스크 장치, 1 = 이미지 파일
+        private int _selectedSidebarTab = 0; // 0 = 디스크 장치, 1 = 이미지 파일, 2 = 파일 선택
         private DiskItem? _selectedDisk;
 
         public ObservableCollection<DiskItem> Disks { get; } = new ObservableCollection<DiskItem>();
         public ObservableCollection<DiskItem> DiskDevicesList { get; } = new ObservableCollection<DiskItem>();
         public ObservableCollection<DiskItem> ImageFilesList { get; } = new ObservableCollection<DiskItem>();
+
+        // 파일 선택 탭용 선택된 파일 목록
+        public ObservableCollection<SelectedFileItem> SelectedFiles { get; } = new ObservableCollection<SelectedFileItem>();
 
         public event EventHandler<DiskItem>? ScanRequested;
 
@@ -43,13 +47,39 @@ namespace WpfApp.ViewModels
 
             RefreshDisksCommand = new RelayCommand(_ => LoadDisks());
 
+            AddFilesCommand = new RelayCommand(_ => AddFiles());
+            RemoveFileCommand = new RelayCommand(param =>
+            {
+                if (param is SelectedFileItem item)
+                {
+                    RemoveFile(item);
+                }
+            });
+            ClearAllFilesCommand = new RelayCommand(_ => ClearAllFiles());
+
             GoToNextStepCommand = new RelayCommand(_ =>
             {
-                if (SelectedDisk != null && !SelectedDisk.IsAddCard)
+                if (SelectedSidebarTab == 2)
+                {
+                    var allFiles = SelectedFiles.Select(x => x.FilePath).ToList();
+                    var diskItem = new DiskItem
+                    {
+                        IsDirectFilesMode = true,
+                        DirectFilePaths = allFiles,
+                        VolumeLabel = $"직접 선택 파일 ({TotalFileCount}개)",
+                        DiskIndexStr = "직접 선택"
+                    };
+                    ScanRequested?.Invoke(this, diskItem);
+                }
+                else if (SelectedDisk != null && !SelectedDisk.IsAddCard)
                 {
                     ScanRequested?.Invoke(this, SelectedDisk);
                 }
-            }, _ => SelectedDisk != null && !SelectedDisk.IsAddCard);
+            }, _ =>
+            {
+                if (SelectedSidebarTab == 2) return TotalFileCount > 0;
+                return SelectedDisk != null && !SelectedDisk.IsAddCard;
+            });
 
             LoadDisks();
         }
@@ -60,6 +90,9 @@ namespace WpfApp.ViewModels
         public ICommand AddImageCardCommand { get; }
         public ICommand RefreshDisksCommand { get; }
         public ICommand GoToNextStepCommand { get; }
+        public ICommand AddFilesCommand { get; }
+        public ICommand RemoveFileCommand { get; }
+        public ICommand ClearAllFilesCommand { get; }
         #endregion
 
         #region Properties
@@ -72,6 +105,8 @@ namespace WpfApp.ViewModels
                 {
                     OnPropertyChanged(nameof(IsDiskDevicesTabActive));
                     OnPropertyChanged(nameof(IsImageFilesTabActive));
+                    OnPropertyChanged(nameof(IsFileSelectionTabActive));
+                    RaiseNextCanExecute();
 
                     if (IsDiskDevicesTabActive && DiskDevicesList.Count > 0)
                     {
@@ -87,6 +122,46 @@ namespace WpfApp.ViewModels
 
         public bool IsDiskDevicesTabActive => SelectedSidebarTab == 0;
         public bool IsImageFilesTabActive => SelectedSidebarTab == 1;
+        public bool IsFileSelectionTabActive => SelectedSidebarTab == 2;
+
+        public bool HasSelectedFiles => SelectedFiles.Count > 0;
+        public bool HasNoSelectedFiles => SelectedFiles.Count == 0;
+        public int TotalFileCount => SelectedFiles.Count;
+        public string FileSelectionSummary => TotalFileCount == 0 ? "파일 미선택" : $"총 {TotalFileCount}개 선택됨";
+
+        public string FileSelectionDetailSummary
+        {
+            get
+            {
+                if (TotalFileCount == 0) return "선택된 파일 없음";
+                int hwpCount = SelectedFiles.Count(x => x.Extension == ".hwp");
+                int hwpxCount = SelectedFiles.Count(x => x.Extension == ".hwpx");
+                int pdfCount = SelectedFiles.Count(x => x.Extension == ".pdf");
+                int otherCount = TotalFileCount - (hwpCount + hwpxCount + pdfCount);
+
+                var parts = new List<string>();
+                if (hwpCount > 0) parts.Add($"HWP {hwpCount}개");
+                if (hwpxCount > 0) parts.Add($"HWPX {hwpxCount}개");
+                if (pdfCount > 0) parts.Add($"PDF {pdfCount}개");
+                if (otherCount > 0) parts.Add($"기타 {otherCount}개");
+
+                return $"총 {TotalFileCount}개 문서 ({string.Join(", ", parts)}) - {TotalSelectedFilesSizeFormatted}";
+            }
+        }
+
+        public string TotalSelectedFilesSizeFormatted
+        {
+            get
+            {
+                long bytes = SelectedFiles.Sum(f => f.FileSizeBytes);
+                double kb = bytes / 1024.0;
+                if (kb < 1024.0) return $"{kb:F1} KB";
+                double mb = kb / 1024.0;
+                if (mb < 1024.0) return $"{mb:F2} MB";
+                double gb = mb / 1024.0;
+                return $"{gb:F2} GB";
+            }
+        }
 
         public DiskItem? SelectedDisk
         {
@@ -148,6 +223,76 @@ namespace WpfApp.ViewModels
             {
                 SelectedDisk = DiskDevicesList.First();
             }
+        }
+
+        private void RaiseNextCanExecute() => (GoToNextStepCommand as RelayCommand)?.RaiseCanExecuteChanged();
+
+        private void AddFiles()
+        {
+            var dlg = new OpenFileDialog
+            {
+                Title = "분석할 문서 파일 선택 (HWP, HWPX, PDF)",
+                Filter = "모든 분석 대상 문서 (*.hwp;*.hwpx;*.pdf)|*.hwp;*.hwpx;*.pdf|HWP 문서 (*.hwp)|*.hwp|HWPX 문서 (*.hwpx)|*.hwpx|PDF 문서 (*.pdf)|*.pdf|모든 파일 (*.*)|*.*",
+                Multiselect = true
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                bool addedAny = false;
+                foreach (string path in dlg.FileNames)
+                {
+                    if (!SelectedFiles.Any(f => f.FilePath.Equals(path, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        long size = 0;
+                        try
+                        {
+                            var fi = new FileInfo(path);
+                            size = fi.Length;
+                        }
+                        catch { }
+
+                        SelectedFiles.Add(new SelectedFileItem
+                        {
+                            FilePath = path,
+                            FileSizeBytes = size
+                        });
+                        addedAny = true;
+                    }
+                }
+
+                if (addedAny)
+                {
+                    NotifySelectedFilesChanged();
+                }
+            }
+        }
+
+        private void RemoveFile(SelectedFileItem item)
+        {
+            if (SelectedFiles.Remove(item))
+            {
+                NotifySelectedFilesChanged();
+            }
+        }
+
+        private void ClearAllFiles()
+        {
+            if (SelectedFiles.Count > 0)
+            {
+                SelectedFiles.Clear();
+                NotifySelectedFilesChanged();
+            }
+        }
+
+        private void NotifySelectedFilesChanged()
+        {
+            OnPropertyChanged(nameof(HasSelectedFiles));
+            OnPropertyChanged(nameof(HasNoSelectedFiles));
+            OnPropertyChanged(nameof(TotalFileCount));
+            OnPropertyChanged(nameof(FileSelectionSummary));
+            OnPropertyChanged(nameof(FileSelectionDetailSummary));
+            OnPropertyChanged(nameof(TotalSelectedFilesSizeFormatted));
+            RaiseNextCanExecute();
         }
 
         private void AddImageFile()

@@ -131,194 +131,413 @@
                             </StackPanel>
                         </Grid>
                     </Border>
+                    <!-- Tab 2: 파일 선택 -->
+                    <Border Height="50" CornerRadius="8" Margin="0,0,0,6" Cursor="Hand">
+                        <Border.InputBindings>
+                            <MouseBinding MouseAction="LeftClick" Command="{Binding SelectSidebarTabCommand}" CommandParameter="2"/>
+                        </Border.InputBindings>
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsFileSelectionTabActive}" Value="True">
+                                        <Setter Property="Background" Value="#FFFFFF"/>
+                                        <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True">
+                                        <Setter Property="Background" Value="#F1F5F9"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Grid Margin="16,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="📄" FontSize="16" Margin="0,0,10,0"/>
+                                <StackPanel>
+                                    <TextBlock Text="파일 선택" FontSize="14" FontWeight="SemiBold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#64748B"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsFileSelectionTabActive}" Value="True">
+                                                        <Setter Property="Foreground" Value="#3B82F6"/>
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding FileSelectionSummary}" FontSize="10" Foreground="#94A3B8"
+                                               Visibility="{Binding IsFileSelectionTabActive, Converter={StaticResource BoolToVisConverter}}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
                 </StackPanel>
             </Border>
 
             <!-- VERTICAL SEPARATOR LINE -->
             <Rectangle Grid.Column="1" Fill="#E2E8F0"/>
 
-            <!-- CENTER DISK DISPLAY PANEL (Clean & Modern Layout) -->
-            <ScrollViewer Grid.Column="2" Background="#FAFBFD" VerticalScrollBarVisibility="Auto">
-                <StackPanel Margin="32,28">
+            <!-- CENTER DISK DISPLAY PANEL (Clean & Modern Responsive Layout) -->
+            <Grid Grid.Column="2" Background="#FAFBFD">
+                <!-- ScrollViewer for Disk Devices (Tab 0) & Image Files (Tab 1) -->
+                <ScrollViewer Visibility="{Binding IsFileSelectionTabActive, Converter={StaticResource BoolToInvVisConverter}}" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="32,28">
+                        <!-- ItemsControl Grid for Disk Devices (Tab 0) -->
+                        <ItemsControl ItemsSource="{Binding DiskDevicesList}" Visibility="{Binding IsDiskDevicesTabActive, Converter={StaticResource BoolToVisConverter}}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Width="360" Height="210" Margin="0,0,24,24" CornerRadius="14" Padding="22" Cursor="Hand">
+                                        <Border.InputBindings>
+                                            <MouseBinding MouseAction="LeftClick" 
+                                                          Command="{Binding DataContext.SelectDiskCardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                          CommandParameter="{Binding}"/>
+                                        </Border.InputBindings>
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#FFFFFF"/>
+                                                <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                                                <Setter Property="BorderThickness" Value="1"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter Property="BorderBrush" Value="#2563EB"/>
+                                                        <Setter Property="BorderThickness" Value="2"/>
+                                                        <Setter Property="Background" Value="#F0F7FF"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True">
+                                                        <Setter Property="Background" Value="#FFFFFF"/>
+                                                        <Setter Property="BorderBrush" Value="#93C5FD"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
 
-                    <!-- ItemsControl Grid for Disk Devices (Tab 0) -->
-                    <ItemsControl ItemsSource="{Binding DiskDevicesList}" Visibility="{Binding IsDiskDevicesTabActive, Converter={StaticResource BoolToVisConverter}}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Width="360" Height="210" Margin="0,0,24,24" CornerRadius="14" Padding="22" Cursor="Hand">
-                                    <Border.InputBindings>
-                                        <MouseBinding MouseAction="LeftClick" 
-                                                      Command="{Binding DataContext.SelectDiskCardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                                      CommandParameter="{Binding}"/>
-                                    </Border.InputBindings>
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#FFFFFF"/>
-                                            <Setter Property="BorderBrush" Value="#E2E8F0"/>
-                                            <Setter Property="BorderThickness" Value="1"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                    <Setter Property="BorderBrush" Value="#2563EB"/>
-                                                    <Setter Property="BorderThickness" Value="2"/>
-                                                    <Setter Property="Background" Value="#F0F7FF"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True">
-                                                    <Setter Property="Background" Value="#FFFFFF"/>
-                                                    <Setter Property="BorderBrush" Value="#93C5FD"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
+                                            <!-- Card Header -->
+                                            <Grid Grid.Row="0">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Border Width="44" Height="44" CornerRadius="10" Background="#F1F5F9" Margin="0,0,14,0">
+                                                        <TextBlock Text="{Binding IconSymbol}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <TextBlock Text="{Binding VolumeLabel}" FontSize="16" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                            </Grid>
 
-                                        <!-- Card Header: VolumeLabel as-is (Badge Removed) -->
-                                        <Grid Grid.Row="0">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <Border Width="44" Height="44" CornerRadius="10" Background="#F1F5F9" Margin="0,0,14,0">
-                                                    <TextBlock Text="{Binding IconSymbol}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                                <TextBlock Text="{Binding VolumeLabel}" FontSize="16" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <!-- Usage Progress Bar (Standard Disk Card Only) -->
+                                            <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,16,0,0" Visibility="{Binding IsStandardCard, Converter={StaticResource BoolToVisConverter}}">
+                                                <Grid Margin="0,0,0,6">
+                                                    <TextBlock Text="디스크 용량 사용률" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
+                                                    <TextBlock Text="{Binding CapacityFormatted, StringFormat='전체 {0}'}" FontSize="11" FontWeight="Bold" Foreground="#334155" HorizontalAlignment="Right"/>
+                                                </Grid>
+                                                <ProgressBar Height="8" Value="{Binding UsagePercentage, Mode=OneWay}" Maximum="100" Background="#E2E8F0" Foreground="#2563EB" BorderThickness="0"/>
+                                                <Grid Margin="0,6,0,0">
+                                                    <TextBlock Text="{Binding FreeSpaceFormatted, StringFormat='여유: {0}'}" FontSize="11" FontWeight="SemiBold" Foreground="#16A34A"/>
+                                                    <TextBlock Text="{Binding UsagePercentage, StringFormat='{}{0:F1}% 사용중'}" FontSize="11" Foreground="#64748B" HorizontalAlignment="Right"/>
+                                                </Grid>
                                             </StackPanel>
-                                        </Grid>
 
-                                        <!-- Usage Progress Bar (Standard Disk Card Only) -->
-                                        <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,16,0,0" Visibility="{Binding IsStandardCard, Converter={StaticResource BoolToVisConverter}}">
-                                            <Grid Margin="0,0,0,6">
-                                                <TextBlock Text="디스크 용량 사용률" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
-                                                <TextBlock Text="{Binding CapacityFormatted, StringFormat='전체 {0}'}" FontSize="11" FontWeight="Bold" Foreground="#334155" HorizontalAlignment="Right"/>
-                                            </Grid>
-                                            <ProgressBar Height="8" Value="{Binding UsagePercentage, Mode=OneWay}" Maximum="100" Background="#E2E8F0" Foreground="#2563EB" BorderThickness="0"/>
-                                            <Grid Margin="0,6,0,0">
-                                                <TextBlock Text="{Binding FreeSpaceFormatted, StringFormat='여유: {0}'}" FontSize="11" FontWeight="SemiBold" Foreground="#16A34A"/>
-                                                <TextBlock Text="{Binding UsagePercentage, StringFormat='{}{0:F1}% 사용중'}" FontSize="11" Foreground="#64748B" HorizontalAlignment="Right"/>
-                                            </Grid>
-                                        </StackPanel>
-
-                                        <!-- Card Footer: Serial Number Only -->
-                                        <Border Grid.Row="2" BorderBrush="#F1F5F9" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,12,0,0">
-                                            <Grid>
-                                                <TextBlock Text="{Binding SerialNumber, StringFormat='일련번호: {0}'}" FontSize="11" FontWeight="Medium" Foreground="#64748B" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                            </Grid>
-                                        </Border>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-
-                    <!-- ItemsControl Grid for Image Files (Tab 1 - Color & Design Matched 100%) -->
-                    <ItemsControl ItemsSource="{Binding ImageFilesList}" Visibility="{Binding IsImageFilesTabActive, Converter={StaticResource BoolToVisConverter}}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Width="360" Height="210" Margin="0,0,24,24" CornerRadius="14" Padding="22" Cursor="Hand">
-                                    <Border.InputBindings>
-                                        <MouseBinding MouseAction="LeftClick" 
-                                                      Command="{Binding DataContext.SelectDiskCardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                                      CommandParameter="{Binding}"/>
-                                    </Border.InputBindings>
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#FFFFFF"/>
-                                            <Setter Property="BorderBrush" Value="#E2E8F0"/>
-                                            <Setter Property="BorderThickness" Value="1"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                    <Setter Property="BorderBrush" Value="#2563EB"/>
-                                                    <Setter Property="BorderThickness" Value="2"/>
-                                                    <Setter Property="Background" Value="#F0F7FF"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding IsAddCard}" Value="True">
-                                                    <Setter Property="BorderBrush" Value="#93C5FD"/>
-                                                    <Setter Property="BorderThickness" Value="2"/>
-                                                    <Setter Property="Background" Value="#FAFBFD"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True">
-                                                    <Setter Property="Background" Value="#FFFFFF"/>
-                                                    <Setter Property="BorderBrush" Value="#93C5FD"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-
-                                        <!-- Card Header: VolumeLabel as-is (Badge Removed) -->
-                                        <Grid Grid.Row="0">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <Border Width="44" Height="44" CornerRadius="10" Background="#F1F5F9" Margin="0,0,14,0">
-                                                    <TextBlock Text="{Binding IconSymbol}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                                <TextBlock Text="{Binding VolumeLabel}" FontSize="16" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <!-- Image File Details Body (Standard Card) -->
-                                        <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,14,0,0" Visibility="{Binding IsStandardCard, Converter={StaticResource BoolToVisConverter}}">
-                                            <Grid Margin="0,0,0,4">
-                                                <TextBlock Text="종류" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
-                                                <TextBlock Text="{Binding ImageFormatName}" FontSize="11" FontWeight="Bold" Foreground="#0F172A" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
-                                            </Grid>
-                                            <Grid Margin="0,0,0,4">
-                                                <TextBlock Text="용량" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
-                                                <TextBlock Text="{Binding CapacityFormatted, StringFormat='전체 {0}'}" FontSize="11" FontWeight="Bold" Foreground="#2563EB" HorizontalAlignment="Right"/>
-                                            </Grid>
-                                            <Grid Margin="0,0,0,0">
-                                                <TextBlock Text="파티션" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
-                                                <TextBlock Text="{Binding PartitionInfoFormatted}" FontSize="11" FontWeight="Bold" Foreground="#16A34A" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
-                                            </Grid>
-                                        </StackPanel>
-
-                                        <!-- Image File Details Body (Add Card: E01, Ex01, dd only) -->
-                                        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,12,0,0" Visibility="{Binding IsAddCard, Converter={StaticResource BoolToVisConverter}}">
-                                            <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="8" Padding="14,6">
-                                                <TextBlock Text="E01, Ex01, dd" FontSize="12" FontWeight="Bold" Foreground="#2563EB" HorizontalAlignment="Center"/>
+                                            <!-- Card Footer -->
+                                            <Border Grid.Row="2" BorderBrush="#F1F5F9" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,12,0,0">
+                                                <Grid>
+                                                    <TextBlock Text="{Binding SerialNumber, StringFormat='일련번호: {0}'}" FontSize="11" FontWeight="Medium" Foreground="#64748B" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                </Grid>
                                             </Border>
-                                        </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
 
-                                        <!-- Card Footer: Serial Number / Action -->
-                                        <Border Grid.Row="2" BorderBrush="#F1F5F9" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,10,0,0">
-                                            <Grid>
-                                                <TextBlock Text="{Binding SerialNumber, StringFormat='일련번호: {0}'}" FontSize="11" FontWeight="Medium" Foreground="#64748B" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                                           Visibility="{Binding IsStandardCard, Converter={StaticResource BoolToVisConverter}}"/>
-                                                <TextBlock Text="클릭하여 파일 선택" FontSize="11" FontWeight="Bold" Foreground="#2563EB" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                           Visibility="{Binding IsAddCard, Converter={StaticResource BoolToVisConverter}}"/>
+                        <!-- ItemsControl Grid for Image Files (Tab 1) -->
+                        <ItemsControl ItemsSource="{Binding ImageFilesList}" Visibility="{Binding IsImageFilesTabActive, Converter={StaticResource BoolToVisConverter}}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Width="360" Height="210" Margin="0,0,24,24" CornerRadius="14" Padding="22" Cursor="Hand">
+                                        <Border.InputBindings>
+                                            <MouseBinding MouseAction="LeftClick" 
+                                                          Command="{Binding DataContext.SelectDiskCardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                          CommandParameter="{Binding}"/>
+                                        </Border.InputBindings>
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#FFFFFF"/>
+                                                <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                                                <Setter Property="BorderThickness" Value="1"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter Property="BorderBrush" Value="#2563EB"/>
+                                                        <Setter Property="BorderThickness" Value="2"/>
+                                                        <Setter Property="Background" Value="#F0F7FF"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsAddCard}" Value="True">
+                                                        <Setter Property="BorderBrush" Value="#93C5FD"/>
+                                                        <Setter Property="BorderThickness" Value="2"/>
+                                                        <Setter Property="Background" Value="#FAFBFD"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True">
+                                                        <Setter Property="Background" Value="#FFFFFF"/>
+                                                        <Setter Property="BorderBrush" Value="#93C5FD"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Card Header -->
+                                            <Grid Grid.Row="0">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Border Width="44" Height="44" CornerRadius="10" Background="#F1F5F9" Margin="0,0,14,0">
+                                                        <TextBlock Text="{Binding IconSymbol}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <TextBlock Text="{Binding VolumeLabel}" FontSize="16" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
                                             </Grid>
+
+                                            <!-- Image File Details Body (Standard Card) -->
+                                            <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,14,0,0" Visibility="{Binding IsStandardCard, Converter={StaticResource BoolToVisConverter}}">
+                                                <Grid Margin="0,0,0,4">
+                                                    <TextBlock Text="종류" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
+                                                    <TextBlock Text="{Binding ImageFormatName}" FontSize="11" FontWeight="Bold" Foreground="#0F172A" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
+                                                </Grid>
+                                                <Grid Margin="0,0,0,4">
+                                                    <TextBlock Text="용량" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
+                                                    <TextBlock Text="{Binding CapacityFormatted, StringFormat='전체 {0}'}" FontSize="11" FontWeight="Bold" Foreground="#2563EB" HorizontalAlignment="Right"/>
+                                                </Grid>
+                                                <Grid Margin="0,0,0,0">
+                                                    <TextBlock Text="파티션" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
+                                                    <TextBlock Text="{Binding PartitionInfoFormatted}" FontSize="11" FontWeight="Bold" Foreground="#16A34A" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
+                                                </Grid>
+                                            </StackPanel>
+
+                                            <!-- Image File Details Body (Add Card) -->
+                                            <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,12,0,0" Visibility="{Binding IsAddCard, Converter={StaticResource BoolToVisConverter}}">
+                                                <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="8" Padding="14,6">
+                                                    <TextBlock Text="E01, Ex01, dd" FontSize="12" FontWeight="Bold" Foreground="#2563EB" HorizontalAlignment="Center"/>
+                                                </Border>
+                                            </StackPanel>
+
+                                            <!-- Card Footer -->
+                                            <Border Grid.Row="2" BorderBrush="#F1F5F9" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,10,0,0">
+                                                <Grid>
+                                                    <TextBlock Text="{Binding SerialNumber, StringFormat='일련번호: {0}'}" FontSize="11" FontWeight="Medium" Foreground="#64748B" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                               Visibility="{Binding IsStandardCard, Converter={StaticResource BoolToVisConverter}}"/>
+                                                    <TextBlock Text="클릭하여 파일 선택" FontSize="11" FontWeight="Bold" Foreground="#2563EB" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               Visibility="{Binding IsAddCard, Converter={StaticResource BoolToVisConverter}}"/>
+                                                </Grid>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Responsive Grid for File Selection (Tab 2: Stretches to fill entire available height) -->
+                <Grid Visibility="{Binding IsFileSelectionTabActive, Converter={StaticResource BoolToVisConverter}}" Margin="32,28">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/> <!-- Top Action Header Bar -->
+                        <RowDefinition Height="*"/>    <!-- Responsive Table Area (Stretches with Window) -->
+                    </Grid.RowDefinitions>
+
+                    <!-- Top Header with Actions -->
+                    <Grid Grid.Row="0" Margin="0,0,0,20">
+                        <StackPanel>
+                            <TextBlock Text="분석 대상 문서 파일 목록" FontSize="16" FontWeight="Bold" Foreground="#0F172A"/>
+                            <TextBlock Text="HWP, HWPX, PDF 문서를 추가하여 분석 대상 목록을 자유롭게 구성할 수 있습니다." FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
+                        </StackPanel>
+
+                        <!-- Actions Right: [＋ 파일 추가] and [🗑 전체 삭제] -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Command="{Binding AddFilesCommand}" Padding="16,8" Margin="0,0,10,0"
+                                    Background="#2563EB" Foreground="#FFFFFF" BorderThickness="0" Cursor="Hand" ToolTip="문서 파일 추가 (HWP, HWPX, PDF)">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </ScrollViewer>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="＋" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="파일 추가" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{Binding ClearAllFilesCommand}" Padding="14,8"
+                                    Background="#FFFFFF" Foreground="#EF4444" BorderThickness="1" BorderBrush="#FECACA" Cursor="Hand" ToolTip="목록 전체 초기화"
+                                    IsEnabled="{Binding HasSelectedFiles}">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🗑" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="전체 삭제" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Empty State (When HasNoSelectedFiles is True) -->
+                    <Border Grid.Row="1" Visibility="{Binding HasNoSelectedFiles, Converter={StaticResource BoolToVisConverter}}"
+                            Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="48" VerticalAlignment="Stretch">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Border Width="64" Height="64" CornerRadius="32" Background="#F1F5F9" HorizontalAlignment="Center" Margin="0,0,0,16">
+                                <TextBlock Text="📂" FontSize="32" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="추가된 문서 파일이 없습니다" FontSize="16" FontWeight="Bold" Foreground="#334155" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                            <TextBlock Text="상단의 [＋ 파일 추가] 버튼을 클릭하여 분석할 HWP, HWPX, PDF 파일들을 등록해 주세요." FontSize="13" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,0,0,24"/>
+                            <Button Command="{Binding AddFilesCommand}" Padding="20,10" HorizontalAlignment="Center"
+                                    Background="#2563EB" Foreground="#FFFFFF" BorderThickness="0" Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="＋" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="파일 추가하기" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- File List Table (When HasSelectedFiles is True - Stretches Vertically to Bottom) -->
+                    <Border Grid.Row="1" Visibility="{Binding HasSelectedFiles, Converter={StaticResource BoolToVisConverter}}"
+                            Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="0" VerticalAlignment="Stretch">
+                        <DockPanel LastChildFill="True">
+                            <!-- List Summary Bar at Top of Container -->
+                            <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="18,12">
+                                <Grid>
+                                    <TextBlock Text="{Binding FileSelectionDetailSummary}" FontSize="13" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Responsive ItemsControl List Rows (Expands with Parent Grid Row) -->
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <ItemsControl ItemsSource="{Binding SelectedFiles}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="#F1F5F9" BorderThickness="0,0,0,1" Padding="18,12">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#FFFFFF"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True">
+                                                                <Setter Property="Background" Value="#F8FAFC"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/> <!-- Type Badge -->
+                                                        <ColumnDefinition Width="*"/>    <!-- File Name & Path -->
+                                                        <ColumnDefinition Width="100"/>  <!-- File Size -->
+                                                        <ColumnDefinition Width="80"/>   <!-- Action: Exclude Button -->
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <!-- Type Badge -->
+                                                    <Border Grid.Column="0" CornerRadius="6" Padding="8,4" Margin="0,0,16,0" VerticalAlignment="Center"
+                                                            Background="{Binding TypeBadgeBackground}" BorderBrush="{Binding TypeBadgeBorder}" BorderThickness="1">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding IconSymbol}" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{Binding FileTypeTag}" FontSize="11" FontWeight="Bold" Foreground="{Binding TypeBadgeForeground}" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Border>
+
+                                                    <!-- File Name & Path -->
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,16,0">
+                                                        <TextBlock Text="{Binding FileName}" FontSize="14" FontWeight="SemiBold" Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding FilePath}" FontSize="11" Foreground="#64748B" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+
+                                                    <!-- File Size -->
+                                                    <TextBlock Grid.Column="2" Text="{Binding FileSizeFormatted}" FontSize="12" FontWeight="SemiBold" Foreground="#475569"
+                                                               VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+
+                                                    <!-- Exclude / Delete Button -->
+                                                    <Button Grid.Column="3" 
+                                                            Command="{Binding DataContext.RemoveFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                            CommandParameter="{Binding}"
+                                                            Padding="8,4" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                            Background="Transparent" Foreground="#64748B" BorderThickness="1" BorderBrush="#E2E8F0" Cursor="Hand" ToolTip="목록에서 제외">
+                                                        <Button.Template>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="border" Property="Background" Value="#FEE2E2"/>
+                                                                        <Setter TargetName="border" Property="BorderBrush" Value="#FCA5A5"/>
+                                                                        <Setter Property="Foreground" Value="#DC2626"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Button.Template>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="✕" FontSize="11" FontWeight="Bold" Margin="0,0,3,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="제외" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Border>
+                </Grid>
+            </Grid>
         </Grid>
 
         <!-- BOTTOM COMMERCIAL FOOTER BAR -->
         <Border Grid.Row="2" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0">
             <Grid>
-                <!-- Bottom Left Selected Disk Text -->
+                <!-- Bottom Left: 선택 정보 -->
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="24,0,0,0">
-                    <TextBlock Text="선택: " FontSize="13" Foreground="#64748B"/>
-                    <TextBlock Text="{Binding SelectedDisk.VolumeLabel}" FontSize="13" FontWeight="Bold" Foreground="#2563EB"/>
+                    <!-- 디스크/이미지 탭 -->
+                    <StackPanel Orientation="Horizontal"
+                                Visibility="{Binding IsFileSelectionTabActive, Converter={StaticResource BoolToInvVisConverter}}">
+                        <TextBlock Text="선택: " FontSize="13" Foreground="#64748B"/>
+                        <TextBlock Text="{Binding SelectedDisk.VolumeLabel}" FontSize="13" FontWeight="Bold" Foreground="#2563EB"/>
+                    </StackPanel>
+                    <!-- 파일 선택 탭 -->
+                    <StackPanel Orientation="Horizontal"
+                                Visibility="{Binding IsFileSelectionTabActive, Converter={StaticResource BoolToVisConverter}}">
+                        <TextBlock Text="선택된 파일: " FontSize="13" Foreground="#64748B"/>
+                        <TextBlock Text="{Binding FileSelectionSummary}" FontSize="13" FontWeight="Bold" Foreground="#059669"/>
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- Bottom Right "다음" Button -->

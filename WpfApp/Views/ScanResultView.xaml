@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
              mc:Ignorable="d" 
              d:DesignHeight="880" d:DesignWidth="1440">
     <!-- STEP 2: FULL TABULAR DATAGRID FILE LIST VIEW -->
@@ -70,7 +71,7 @@
                     </Grid>
 
                     <!-- 9-COLUMN DATAGRID -->
-                    <DataGrid x:Name="FileDataGrid" Grid.Row="2" ItemsSource="{Binding FilteredFileList}" SelectedItem="{Binding SelectedFile}" 
+                    <DataGrid x:Name="FileDataGrid" Grid.Row="2" ItemsSource="{Binding FilteredFileList}" SelectedItem="{Binding SelectedFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                               AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single"
                               GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#F1F5F9"
                               Background="#FFFFFF" BorderThickness="1" BorderBrush="#E2E8F0" RowHeaderWidth="0" 
@@ -340,24 +341,21 @@
 
                     <!-- Row 2: Action Buttons -->
                     <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,12">
-                        <Button Content="📋 본문 복사" Command="{Binding CopyTextCommand}" Style="{StaticResource SecondaryBtn}" Margin="0,0,8,0"/>
                         <Button Content="📂 폴더 열기" Command="{Binding OpenFolderCommand}" Style="{StaticResource SecondaryBtn}" Margin="0,0,8,0"/>
-                        <Button Content="파일 열기" Command="{Binding OpenFileCommand}" Style="{StaticResource DessFooterBtn}" Padding="14,4" Margin="0"/>
+                        <Button Content="📄 파일 열기" Command="{Binding OpenFileCommand}" Style="{StaticResource DessFooterBtn}" Padding="14,4" Margin="0"/>
                     </StackPanel>
 
-                    <!-- Row 3: Text Reader Content Box -->
-                    <Border Grid.Row="3" Background="#FAFBFD" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1" Padding="16">
+                    <!-- Row 3: Unified WebView2 Document Viewer Component -->
+                    <Border Grid.Row="3" Background="#F8FAFC" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1" Padding="8">
                         <Grid>
-                            <TextBox Text="{Binding PreviewText}" IsReadOnly="True" TextWrapping="Wrap" 
-                                     AcceptsReturn="True" VerticalScrollBarVisibility="Auto" 
-                                     Background="Transparent" Foreground="#1E293B" BorderThickness="0" 
-                                     FontFamily="Malgun Gothic, Consolas" FontSize="13"/>
+                            <!-- Unified WebView2 Document Viewer (PDF native & HWP/HWPX A4 Paper HTML) -->
+                            <wv2:WebView2 x:Name="MainWebView"/>
 
-                            <!-- Loading Indicator -->
+                            <!-- Loading Indicator Overlay -->
                             <Border Background="#E0FFFFFF" Visibility="{Binding IsPreviewLoading, Converter={StaticResource BoolToVisConverter}}" CornerRadius="6">
                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <ProgressBar Width="160" Height="6" IsIndeterminate="True" Foreground="#3B82F6"/>
-                                    <TextBlock Text="문서 텍스트 본문 추출 중..." FontSize="13" FontWeight="Bold" Foreground="#3B82F6" Margin="0,12,0,0"/>
+                                    <TextBlock Text="문서 미리보기 읽는 중..." FontSize="13" FontWeight="Bold" Foreground="#3B82F6" Margin="0,12,0,0"/>
                                 </StackPanel>
                             </Border>
                         </Grid>

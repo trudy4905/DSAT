@@ -7,6 +7,7 @@
     <Application.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
         <converters:InverseBoolToVisibilityConverter x:Key="BoolToInvVisConverter"/>
+        <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
 
         <!-- Global Button Styles -->
         <Style x:Key="DessFooterBtn" TargetType="Button">

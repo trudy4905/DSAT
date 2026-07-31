@@ -26,8 +26,30 @@ namespace WpfApp.ViewModels
         private string _previewLastModified = "-";
         private string _previewFormatType = "-";
         private string _previewText = "왼쪽 목록에서 .hwp 또는 .hwpx 파일을 선택하면 여기에 내용이 표시됩니다.";
+        private bool _isPdfPreview;
+        private Uri? _previewUri;
         private int _previewLineCount = 0;
         private int _previewCharCount = 0;
+
+        private string _previewHtmlContent = string.Empty;
+
+        public bool IsPdfPreview
+        {
+            get => _isPdfPreview;
+            set => SetProperty(ref _isPdfPreview, value);
+        }
+
+        public Uri? PreviewUri
+        {
+            get => _previewUri;
+            set => SetProperty(ref _previewUri, value);
+        }
+
+        public string PreviewHtmlContent
+        {
+            get => _previewHtmlContent;
+            set => SetProperty(ref _previewHtmlContent, value);
+        }
 
         private DiskItem? _selectedDisk;
         private bool _hasNoScanResult;
@@ -65,15 +87,28 @@ namespace WpfApp.ViewModels
                 {
                     try
                     {
+                        // Create safe temp directory for forensic replica viewing
+                        string tempDir = Path.Combine(Path.GetTempPath(), "DSAT_SafeReplica");
+                        Directory.CreateDirectory(tempDir);
+
+                        string safeFileName = $"SafeCopy_{Guid.NewGuid().ToString("N")[..8]}_{Path.GetFileName(SelectedFile.FilePath)}";
+                        string tempCopyPath = Path.Combine(tempDir, safeFileName);
+
+                        // Copy original file to temp directory (Preserves original evidence metadata)
+                        File.Copy(SelectedFile.FilePath, tempCopyPath, overwrite: true);
+
+                        // Set ReadOnly attribute on temp copy
+                        File.SetAttributes(tempCopyPath, FileAttributes.ReadOnly);
+
                         Process.Start(new ProcessStartInfo
                         {
-                            FileName = SelectedFile.FilePath,
+                            FileName = tempCopyPath,
                             UseShellExecute = true
                         });
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"파일 열기 실패: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show($"안전 복사본 파일 열기 실패: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }, _ => SelectedFile != null && File.Exists(SelectedFile?.FilePath));
@@ -346,16 +381,40 @@ namespace WpfApp.ViewModels
             PreviewFilePath = fileItem.FilePath;
             PreviewFileSize = fileItem.FileSizeFormatted;
             PreviewLastModified = fileItem.LastModifiedFormatted;
+
+            if (fileItem.Extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                IsPdfPreview = true;
+                PreviewFormatType = "PDF";
+                try
+                {
+                    PreviewUri = new Uri(fileItem.FilePath);
+                }
+                catch { }
+                IsPreviewLoading = false;
+                return;
+            }
+
+            IsPdfPreview = false;
             PreviewText = "본문 텍스트 추출 중...";
 
             try
             {
-                var result = await HwpPreviewService.ExtractTextAsync(fileItem.FilePath);
+                var result = await DocumentPreviewService.ExtractTextAsync(fileItem.FilePath);
 
                 PreviewFormatType = result.FormatType;
                 PreviewText = result.ContentText;
                 PreviewLineCount = result.LineCount;
                 PreviewCharCount = result.CharCount;
+
+                PreviewHtmlContent = HwpHtmlDocumentGenerator.GenerateHwpHtmlDocument(
+                    fileItem.FileName, 
+                    result.ContentText, 
+                    result.FormatType, 
+                    fileItem.FilePath, 
+                    fileItem.FileSizeFormatted, 
+                    fileItem.LastModifiedFormatted
+                );
             }
             catch (Exception ex)
             {
