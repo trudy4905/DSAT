@@ -152,7 +152,14 @@ namespace WpfApp.ViewModels
                 var targetFiles = FilteredFileList.Where(x => x.IsSelectedForExport && File.Exists(x.FilePath)).ToList();
                 if (targetFiles.Count == 0)
                 {
-                    MessageBox.Show("내보낼 선택된 파일이 없습니다. 리스트에서 체크박스를 선택해 주세요.", "안내", MessageBoxButton.OK, MessageBoxImage.Information);
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var dialog = new ExportCompleteDialog(0, string.Empty)
+                        {
+                            Owner = Application.Current.MainWindow
+                        };
+                        dialog.ShowDialog();
+                    });
                     return;
                 }
 

@@ -15,8 +15,17 @@ namespace WpfApp.Views
             InitializeComponent();
             TargetFolderPath = targetFolderPath;
 
-            TxtSummary.Text = $"총 {exportedCount:N0}개 파일 내보내기 성공";
-            TxtFolderPath.Text = targetFolderPath;
+            if (exportedCount == 0 && string.IsNullOrEmpty(targetFolderPath))
+            {
+                TxtSummary.Text = "선택된 파일이 없습니다.";
+                TxtFolderPath.Text = "리스트에서 체크박스를 선택해 주세요.";
+                BtnOpenFolder.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                TxtSummary.Text = $"총 {exportedCount:N0}개 파일 내보내기 성공";
+                TxtFolderPath.Text = targetFolderPath;
+            }
         }
 
         private void Header_MouseDown(object sender, MouseButtonEventArgs e)

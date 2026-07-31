@@ -138,19 +138,36 @@
                         <DataGrid.Columns>
                             <!-- 0. 선택 체크박스 + 번호 통합 컬럼 (Selection CheckBox & Index Number) -->
                             <DataGridTemplateColumn Width="72" SortMemberPath="IsSelectedForExport">
+                                <DataGridTemplateColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader">
+                                        <Setter Property="Background" Value="#F8FAFC"/>
+                                        <Setter Property="Foreground" Value="#334155"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="FontSize" Value="12"/>
+                                        <Setter Property="Padding" Value="0,8"/>
+                                        <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                                        <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                                        <Setter Property="Cursor" Value="Hand"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#F1F5F9"/>
+                                                <Setter Property="Foreground" Value="#0F172A"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGridTemplateColumn.HeaderStyle>
                                 <DataGridTemplateColumn.Header>
-                                    <Border HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <CheckBox IsChecked="{Binding DataContext.IsAllSelectedForExport, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}" 
-                                                  HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" Padding="0"
-                                                  ToolTip="전체 선택 / 해제 및 클릭 시 체크 항목 정렬"/>
-                                    </Border>
+                                    <CheckBox IsChecked="{Binding DataContext.IsAllSelectedForExport, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}" 
+                                              HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" Padding="0"
+                                              ToolTip="전체 선택 / 해제 및 클릭 시 체크 항목 정렬"/>
                                 </DataGridTemplateColumn.Header>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <CheckBox IsChecked="{Binding IsSelectedForExport, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                            <TextBlock Text="{Binding Index}" FontSize="12" Foreground="#64748B" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Index}" FontSize="12" Foreground="#64748B" VerticalAlignment="Center" Width="22" TextAlignment="Center"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -378,7 +395,7 @@
         <!-- BOTTOM FOOTER BAR (STEP 2) -->
         <Border Grid.Row="2" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0">
             <Grid>
-                <!-- Bottom Left: "◀ 뒤로" Button -->
+                <!-- Bottom Left: "뒤로" Button -->
                 <Button Content="뒤로" Command="{Binding GoToPreviousStepCommand}" 
                         Style="{StaticResource SecondaryBtn}" HorizontalAlignment="Left" VerticalAlignment="Center" 
                         Margin="20,10,0,10" Padding="14,5"/>
@@ -386,7 +403,36 @@
                 <!-- Bottom Right: Selected Count Summary & Export Button -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,24,0">
                     <TextBlock Text="{Binding SelectedExportCountText}" FontSize="13" FontWeight="Bold" Foreground="#3B82F6" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                    <Button Content="📤 선택 파일 내보내기" Command="{Binding ExportSelectedFilesCommand}" Style="{StaticResource DessFooterBtn}" Background="#059669" BorderBrush="#047857" Padding="16,5" Margin="0"/>
+                    <Button Content="내보내기" Command="{Binding ExportSelectedFilesCommand}" Padding="20,8" Margin="0">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="#64748B"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="FontSize" Value="13"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#475569"/>
+                                    </Trigger>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Background" Value="#E2E8F0"/>
+                                        <Setter Property="Foreground" Value="#94A3B8"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
