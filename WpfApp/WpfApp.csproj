@@ -14,15 +14,16 @@
     <Resource Include="Resources\app_icon.png" />
     <None Include="..\NativeEngine\NativeEngine.dll">
       <Link>NativeEngine.dll</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
+  <!-- Always build C++ NativeEngine first before building WpfApp -->
   <Target Name="BuildNativeEngineDll" BeforeTargets="BeforeBuild">
-    <Exec Command="cmd /c build_dll.bat" WorkingDirectory="$(MSBuildProjectDirectory)\..\NativeEngine" Condition="!Exists('$(MSBuildProjectDirectory)\..\NativeEngine\NativeEngine.dll')" />
+    <Exec Command="cmd /c build_dll.bat" WorkingDirectory="$(MSBuildProjectDirectory)\..\NativeEngine" IgnoreExitCode="true" />
   </Target>
 
-<ItemGroup>
+  <ItemGroup>
     <PackageReference Include="System.Management" Version="7.0.0" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
   </ItemGroup>

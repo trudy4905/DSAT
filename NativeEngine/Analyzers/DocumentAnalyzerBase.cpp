@@ -1,6 +1,7 @@
 #include "DocumentAnalyzerBase.h"
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 
 uint16_t DocumentAnalyzerBase::ReadU16(const uint8_t *p) {
   return static_cast<uint16_t>(p[0] | (p[1] << 8));
@@ -20,29 +21,52 @@ bool DocumentAnalyzerBase::MatchBytes(const uint8_t *buffer, size_t bufferLen,
 }
 
 void DocumentAnalyzerBase::FormatResult(uint64_t physicalSize,
-                                        uint64_t logicalSize,
-                                        DocumentAnalysisResult &outResult) {
+                                         uint64_t logicalSize,
+                                         const std::vector<DetectionFinding>& findings,
+                                         DocumentAnalysisResult &outResult) {
   outResult.physicalSize = physicalSize;
   outResult.logicalSize = logicalSize;
+  outResult.overlaySize = (physicalSize > logicalSize) ? (physicalSize - logicalSize) : 0;
 
-  const uint64_t OVERLAY_THRESHOLD = 16;
-  if (physicalSize > logicalSize + OVERLAY_THRESHOLD) {
-    uint64_t overlayBytes = physicalSize - logicalSize;
-    outResult.hasOverlay = 1;
-    outResult.isNormal = 0;
-    outResult.riskLevel = 2; // 2 = Danger (Red)
-    outResult.findingCount = 1;
-    outResult.overlaySize = overlayBytes;
+  int count = static_cast<int>(findings.size());
+  outResult.findingCount = std::min(count, 8); // 최대 8개 저장
 
-    strncpy_s(outResult.statusMessage, sizeof(outResult.statusMessage), "EOF",
-              _TRUNCATE);
-  } else {
-    outResult.hasOverlay = 0;
+  if (findings.empty()) {
     outResult.isNormal = 1;
-    outResult.riskLevel = 0; // 0 = Safe (Green)
-    outResult.findingCount = 0;
-    outResult.overlaySize = 0;
-    strncpy_s(outResult.statusMessage, sizeof(outResult.statusMessage), "정상",
-              _TRUNCATE);
+    outResult.hasOverlay = 0;
+    outResult.riskLevel = 0; // Safe (Green)
+    strncpy_s(outResult.statusMessage, sizeof(outResult.statusMessage), "정상", _TRUNCATE);
+  } else {
+    outResult.isNormal = 0;
+    int maxRisk = 0;
+    bool hasOverlay = false;
+    std::string summaryStr = "";
+
+    for (int i = 0; i < outResult.findingCount; ++i) {
+      const auto& f = findings[i];
+
+      outResult.findings[i].riskLevel = f.riskLevel;
+      outResult.findings[i].ruleType = static_cast<int32_t>(f.ruleType);
+      strncpy_s(outResult.findings[i].title, sizeof(outResult.findings[i].title), f.title.c_str(), _TRUNCATE);
+      strncpy_s(outResult.findings[i].description, sizeof(outResult.findings[i].description), f.description.c_str(), _TRUNCATE);
+
+      if (f.riskLevel > maxRisk) maxRisk = f.riskLevel;
+      if (f.ruleType == RULE_TYPE_OVERLAY) hasOverlay = true;
+
+      if (!summaryStr.empty()) summaryStr += ", ";
+      summaryStr += f.title;
+    }
+
+    outResult.riskLevel = maxRisk;
+    outResult.hasOverlay = hasOverlay ? 1 : 0;
+
+    // C++ 엔진에서 테이블/결과창에 표시할 최종 요약 텍스트 결정
+    if (outResult.findingCount > 1) {
+      char countBuf[64];
+      sprintf_s(countBuf, sizeof(countBuf), "탐지 (%d건)", outResult.findingCount);
+      strncpy_s(outResult.statusMessage, sizeof(outResult.statusMessage), countBuf, _TRUNCATE);
+    } else {
+      strncpy_s(outResult.statusMessage, sizeof(outResult.statusMessage), summaryStr.c_str(), _TRUNCATE);
+    }
   }
 }

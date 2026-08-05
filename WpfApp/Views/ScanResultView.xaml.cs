@@ -65,53 +65,23 @@ namespace WpfApp.Views
                 {
                     MainWebView.NavigateToString(_currentViewModel.PreviewHtmlContent);
                 }
-                else if (!string.IsNullOrEmpty(_currentViewModel.PreviewText))
+                else
                 {
-                    string fallbackHtml = HwpHtmlDocumentGenerator.GenerateHwpHtmlDocument(
-                        _currentViewModel.PreviewTitle,
-                        _currentViewModel.PreviewText,
-                        _currentViewModel.PreviewFormatType,
-                        _currentViewModel.PreviewFilePath,
-                        _currentViewModel.PreviewFileSize,
-                        _currentViewModel.PreviewLastModified
-                    );
-                    MainWebView.NavigateToString(fallbackHtml);
+                    MainWebView.NavigateToString("<html><body style='font-family:sans-serif;padding:20px;color:#64748B;'>미리보기를 불러올 수 없거나 빈 문서입니다.</body></html>");
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"WebView2 Error: {ex.Message}");
+            }
         }
 
         private void FileDataGrid_Sorting(object sender, DataGridSortingEventArgs e)
         {
-            if (e.Column.SortMemberPath == "Index")
-            {
-                e.Handled = true; // Disable sorting for '번호' column
-                return;
-            }
+            if (_currentViewModel == null) return;
 
-            if (DataContext is ScanResultViewModel vm && e.Column.SortMemberPath != null)
-            {
-                if (vm.SortColumnCommand.CanExecute(e.Column.SortMemberPath))
-                {
-                    vm.SortColumnCommand.Execute(e.Column.SortMemberPath);
-                }
-
-                // Update headers (workaround since Column Headers don't inherit DataContext perfectly)
-                foreach (var col in FileDataGrid.Columns)
-                {
-                    if (col.SortMemberPath == "Index") col.Header = vm.HeaderIndex;
-                    else if (col.SortMemberPath == "StatusText") col.Header = vm.HeaderStatus;
-                    else if (col.SortMemberPath == "FileName") col.Header = vm.HeaderFileName;
-                    else if (col.SortMemberPath == "FileSizeBytes") col.Header = vm.HeaderFileSize;
-                    else if (col.SortMemberPath == "Extension") col.Header = vm.HeaderExtension;
-                    else if (col.SortMemberPath == "FilePath") col.Header = vm.HeaderFilePath;
-                    else if (col.SortMemberPath == "CreatedTime") col.Header = vm.HeaderCreatedTime;
-                    else if (col.SortMemberPath == "LastModified") col.Header = vm.HeaderLastModified;
-                    else if (col.SortMemberPath == "TextSnippet") col.Header = vm.HeaderTextSnippet;
-                }
-
-                e.Handled = true;
-            }
+            e.Handled = true;
+            _currentViewModel.SortByColumn(e.Column.SortMemberPath);
         }
     }
 }

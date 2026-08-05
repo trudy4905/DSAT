@@ -17,8 +17,8 @@ namespace WpfApp.ViewModels
     public class ScanResultViewModel : ObservableObject
     {
         private string _searchQuery = string.Empty;
-        private string _currentSortColumn = "FileName";
-        private bool _isSortAscending = true;
+        private string _currentSortColumn = "StatusText";
+        private bool _isSortAscending = false;
         private HwpFileItem? _selectedFile;
 
         private bool _isPreviewLoading;
@@ -299,6 +299,21 @@ namespace WpfApp.ViewModels
                 OnPropertyChanged(nameof(IsAllSelectedForExport));
                 OnPropertyChanged(nameof(SelectedExportCountText));
             }
+        }
+
+        public void SortByColumn(string sortMemberPath)
+        {
+            if (string.IsNullOrEmpty(sortMemberPath)) return;
+            if (_currentSortColumn == sortMemberPath)
+            {
+                _isSortAscending = !_isSortAscending;
+            }
+            else
+            {
+                _currentSortColumn = sortMemberPath;
+                _isSortAscending = true;
+            }
+            ApplyFileFilter();
         }
 
         private void ApplyFileFilter()

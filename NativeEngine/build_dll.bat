@@ -9,8 +9,13 @@ cl.exe /LD /DENGINE_EXPORTS /utf-8 /O2 /EHsc /W4 /std:c++17 ^
   Engine.cpp ^
   Analyzers\DocumentAnalyzerBase.cpp ^
   Analyzers\HwpDocumentAnalyzer.cpp ^
+  Analyzers\Hwp\CheckHwpOleOverlay.cpp ^
+  Analyzers\Hwp\CheckHwpMacro.cpp ^
+  Analyzers\Hwp\CheckHwpStructure.cpp ^
   Analyzers\HwpxDocumentAnalyzer.cpp ^
+  Analyzers\Hwpx\CheckHwpxZipOverlay.cpp ^
   Analyzers\PdfDocumentAnalyzer.cpp ^
+  Analyzers\Pdf\CheckPdfEofOverlay.cpp ^
   Factories\DocumentAnalyzerFactory.cpp ^
   Managers\EngineStatusManager.cpp ^
   /Fe:NativeEngine.dll

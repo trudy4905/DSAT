@@ -166,10 +166,10 @@ namespace WpfApp.Models
         {
             StatusBadgeColor = RiskLevel switch
             {
-                1 => "#D97706", // Amber (Caution)
-                2 => "#DC2626", // Red (Danger)
-                3 => "#9333EA", // Purple (Critical)
-                _ => "#16A34A"  // Green (Safe)
+                1 => "#F59E0B", // Amber (주의)
+                2 => "#EA580C", // Orange-Red (위험)
+                3 => "#DC2626", // Red (심각 - 강렬한 빨간색!)
+                _ => "#16A34A"  // Green (정상)
             };
         }
         #endregion

@@ -5,49 +5,42 @@ using WpfApp.Models;
 namespace WpfApp.Services.Evaluators
 {
     /// <summary>
-    /// C++ Native Engine 구조 분석 결과를 바탕으로 위험도 레벨(0:Safe, 1:Caution, 2:Danger, 3:Critical)과
-    /// 탐지 소견(DetectionFindingItem)을 통합 계산/평가하는 모듈입니다.
+    /// C++ Native Engine 구조 분석 결과를 가공 없이 C# UI 데이터 모델에 그대로 전달 바인딩하는 평가 모듈입니다.
+    /// 모든 결과 판단 및 텍스트 구성은 C++ Native Engine에서 전담합니다.
     /// </summary>
     public static class DocumentRiskEvaluator
     {
         public static void EvaluateDocument(HwpFileItem item, DocumentAnalysisResult analysis)
         {
+            // 1. C++ Native Engine이 판단한 상태값 100% 그대로 대입
             item.IsNormal = (analysis.IsNormal == 1);
             item.HasOverlay = (analysis.HasOverlay == 1);
+            item.RiskLevel = analysis.RiskLevel;
             item.OverlaySizeBytes = (long)analysis.OverlaySize;
+            item.StatusText = analysis.StatusMessage;
 
+            // 2. C++ Native Engine이 생성한 개별 탐지 카드 목록 그대로 대입
             var findings = new List<DetectionFindingItem>();
 
-            if (analysis.HasOverlay == 1)
+            if (analysis.FindingCount > 0 && analysis.Findings != null)
             {
-                double kb = analysis.OverlaySize / 1024.0;
-                string overlayStr = kb >= 1024.0 ? $"{kb / 1024.0:F2} MB" : $"{kb:F1} KB";
-
-                findings.Add(new DetectionFindingItem
+                int count = Math.Min(analysis.FindingCount, analysis.Findings.Length);
+                for (int i = 0; i < count; i++)
                 {
-                    Title = "데이터 오버레이 탐지",
-                    Description = $"문서 마지막 오프셋 뒤에 {overlayStr} 크기의 데이터 발견",
-                    RiskLevel = 2 // Danger (Red)
-                });
+                    var nativeFinding = analysis.Findings[i];
+                    if (string.IsNullOrWhiteSpace(nativeFinding.Title)) continue;
+
+                    findings.Add(new DetectionFindingItem
+                    {
+                        Title = nativeFinding.Title,
+                        Description = nativeFinding.Description,
+                        RiskLevel = nativeFinding.RiskLevel,
+                        RuleType = (DetectionRuleType)nativeFinding.RuleType
+                    });
+                }
             }
 
             item.Findings = findings;
-
-            if (findings.Count > 1)
-            {
-                item.RiskLevel = 3; // Critical (Purple)
-                item.StatusText = $"위험 ({findings.Count}건)";
-            }
-            else if (findings.Count == 1)
-            {
-                item.RiskLevel = findings[0].RiskLevel;
-                item.StatusText = string.IsNullOrWhiteSpace(analysis.StatusMessage) ? "EOF" : analysis.StatusMessage;
-            }
-            else
-            {
-                item.RiskLevel = 0; // Safe (Green)
-                item.StatusText = "정상";
-            }
         }
     }
 }

@@ -16,6 +16,39 @@ namespace WpfApp.Services
         public ulong TotalProcessedItems;
     }
 
+    public enum DetectionRuleType
+    {
+        None = 0,
+        Overlay = 1,
+        MacroScript = 2,
+        StructureAnomaly = 3,
+        EncryptedStream = 4
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    public struct NativeFindingItem
+    {
+        public int RiskLevel;
+        public int RuleType;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)]
+        public byte[] TitleBytes;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
+        public byte[] DescriptionBytes;
+
+        public string Title => GetUtf8String(TitleBytes);
+        public string Description => GetUtf8String(DescriptionBytes);
+
+        private static string GetUtf8String(byte[] bytes)
+        {
+            if (bytes == null || bytes.Length == 0) return string.Empty;
+            int nullIdx = Array.IndexOf(bytes, (byte)0);
+            int len = nullIdx >= 0 ? nullIdx : bytes.Length;
+            return System.Text.Encoding.UTF8.GetString(bytes, 0, len);
+        }
+    }
+
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public struct DocumentAnalysisResult
     {
@@ -32,6 +65,9 @@ namespace WpfApp.Services
 
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 128)]
         public byte[] StatusMessageBytes;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
+        public NativeFindingItem[] Findings;
 
         public string StatusMessage
         {
