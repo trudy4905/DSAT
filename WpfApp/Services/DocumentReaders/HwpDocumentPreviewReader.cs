@@ -349,10 +349,12 @@ namespace WpfApp.Services.DocumentReaders
                     pos += 4;
                 }
 
-                if (tagId == 67 && size > 0 && pos + size <= data.Length)
+                if (size < 0 || pos + size > data.Length) break;
+
+                if (tagId == 67 && size > 0)
                 {
                     int i = 0;
-                    while (i + 1 < size)
+                    while (i + 1 < size && pos + i + 1 < data.Length)
                     {
                         char c = (char)ReadU16LE(data, pos + i);
                         i += 2;
@@ -385,7 +387,6 @@ namespace WpfApp.Services.DocumentReaders
                     sb.AppendLine();
                 }
 
-                if (pos + size > data.Length) break;
                 pos += size;
             }
         }

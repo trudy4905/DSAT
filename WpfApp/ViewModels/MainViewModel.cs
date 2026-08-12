@@ -179,7 +179,7 @@ namespace WpfApp.ViewModels
                 _scanResultViewModel.ScanProgressText = ScanProgressText;
                 _scanResultViewModel.InitializeResults(results);
 
-                await Task.Delay(300); // Visual feedback pause
+                await Task.Delay(200);
 
                 CurrentViewModel = _scanResultViewModel;
             }

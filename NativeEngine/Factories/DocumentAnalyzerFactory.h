@@ -7,7 +7,7 @@
 
 class DocumentAnalyzerFactory {
 public:
-    static std::unique_ptr<IDocumentAnalyzer> CreateAnalyzer(const std::string& filePath);
+    static std::unique_ptr<IDocumentAnalyzer> CreateAnalyzer(const std::wstring& filePath);
 };
 
 #endif /* DOCUMENT_ANALYZER_FACTORY_H */

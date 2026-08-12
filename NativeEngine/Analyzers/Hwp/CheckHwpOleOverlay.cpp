@@ -43,7 +43,12 @@ DetectionFinding CheckHwpOleOverlay(FILE *fp, uint64_t fileSize,
 
   uint32_t difatSec = firstDifatSector;
   int safety = 0;
+  std::vector<uint32_t> visitedDifat;
   while (difatSec < 0xFFFFFFFCU && safety++ < 1000) {
+    if (std::find(visitedDifat.begin(), visitedDifat.end(), difatSec) != visitedDifat.end())
+      break;
+    visitedDifat.push_back(difatSec);
+
     uint64_t off = 512ULL + (uint64_t)difatSec * sectorSize;
     if (off + sectorSize > fileSize)
       break;
@@ -68,7 +73,7 @@ DetectionFinding CheckHwpOleOverlay(FILE *fp, uint64_t fileSize,
   uint64_t maxUsedSectorIdx = 0;
   int entriesPerFatSec = (int)(sectorSize / 4);
 
-  for (size_t fi = 0; fi < fatSectorNums.size(); ++fi) {
+  for (size_t fi = 0; fi < fatSectorNums.size() && fi < 10000; ++fi) {
     uint32_t fatSecNum = fatSectorNums[fi];
     uint64_t off = 512ULL + (uint64_t)fatSecNum * sectorSize;
     if (off + sectorSize > fileSize)
@@ -83,7 +88,7 @@ DetectionFinding CheckHwpOleOverlay(FILE *fp, uint64_t fileSize,
     for (int i = 0; i < entriesPerFatSec; ++i) {
       uint32_t entry = (buf[i * 4] | (buf[i * 4 + 1] << 8) |
                         (buf[i * 4 + 2] << 16) | (buf[i * 4 + 3] << 24));
-      if (entry != 0xFFFFFFFFU) {
+      if (entry < 0xFFFFFFFCU) {
         uint64_t globalSecIdx = (uint64_t)fi * entriesPerFatSec + i;
         if (globalSecIdx > maxUsedSectorIdx)
           maxUsedSectorIdx = globalSecIdx;

@@ -33,11 +33,35 @@ namespace WpfApp.Models
 
         public string FileName { get; set; } = string.Empty;
         public string FilePath { get; set; } = string.Empty;
+        /// <summary>이미지 내부 가상 경로 (포렌식 이미지 스캔 시에만 사용, UI 표시용)</summary>
+        public string VirtualPath { get; set; } = string.Empty;
+        /// <summary>포렌식 이미지에서 추출된 실제 임시 파일 경로 (파일 열기/내보내기용)</summary>
+        public string TempExtractPath { get; set; } = string.Empty;
         public string DirectoryPath => System.IO.Path.GetDirectoryName(FilePath) ?? string.Empty;
         public string Extension { get; set; } = string.Empty; // ".hwp", ".hwpx", ".pdf"
         public long FileSizeBytes { get; set; }
         public DateTime CreatedTime { get; set; } = DateTime.Now;
         public DateTime LastModified { get; set; }
+
+        private bool _isDeleted = false;
+
+        public bool IsDeleted
+        {
+            get => _isDeleted;
+            set
+            {
+                if (_isDeleted != value)
+                {
+                    _isDeleted = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsDeletedDisplay));
+                    OnPropertyChanged(nameof(IsDeletedBadgeColor));
+                }
+            }
+        }
+
+        public string IsDeletedDisplay => IsDeleted ? "Yes" : "No";
+        public string IsDeletedBadgeColor => IsDeleted ? "#DC2626" : "#64748B";
 
         public bool IsPdf => Extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase);
         public bool IsHwpx => Extension.Equals(".hwpx", StringComparison.OrdinalIgnoreCase);

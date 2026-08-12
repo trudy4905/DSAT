@@ -1,34 +1,42 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using WpfApp.Models;
-using WpfApp.Services.Inspectors;
-using WpfApp.Services.Readers;
 
 namespace WpfApp.Services
 {
     public static class DiskImageService
     {
-        private static readonly HashSet<string> SupportedExtensions = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly HashSet<string> StandardExtensions = new(StringComparer.OrdinalIgnoreCase)
         {
-            ".e01", ".ex01", ".raw", ".dd", ".img", ".iso", ".vhd", ".vmdk"
+            ".e01", ".ex01", ".raw", ".dd", ".001"
         };
 
-        public static IDiskReader CreateReader(string filePath)
+        public static bool IsSupportedImageExtension(string filePath)
         {
+            if (string.IsNullOrWhiteSpace(filePath)) return false;
+
             string ext = Path.GetExtension(filePath).ToLowerInvariant();
-            return ext switch
+            if (StandardExtensions.Contains(ext)) return true;
+
+            string fileName = Path.GetFileName(filePath);
+            if (Regex.IsMatch(fileName, @"\.(?:e\d{2}|ex\d{2}|e[a-z]{2}|\d{3,4})$", RegexOptions.IgnoreCase))
             {
-                ".e01" or ".ex01" => new E01ImageReader(filePath),
-                ".vhd" or ".vmdk" => new VirtualDiskImageReader(filePath),
-                _ => new RawImageReader(filePath)
-            };
+                return true;
+            }
+
+            return false;
         }
 
         public static ImageInspectionResult InspectImageFileSystems(string filePath)
         {
+            Console.WriteLine($"[C# DiskImageService] InspectImageFileSystems called for: {filePath}");
+
             if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
             {
+                Console.WriteLine("[C# DiskImageService] File does not exist!");
                 return new ImageInspectionResult
                 {
                     IsValidSupportedImage = false,
@@ -36,28 +44,99 @@ namespace WpfApp.Services
                 };
             }
 
-            string ext = Path.GetExtension(filePath).ToLowerInvariant();
-            if (!SupportedExtensions.Contains(ext))
+            if (!IsSupportedImageExtension(filePath))
             {
+                string ext = Path.GetExtension(filePath).ToLowerInvariant();
+                Console.WriteLine($"[C# DiskImageService] Unsupported extension: {ext}");
                 return new ImageInspectionResult
                 {
                     IsValidSupportedImage = false,
-                    ErrorMessage = $"지원하지 않는 이미지 확장자입니다 ({ext}). (.E01, .Ex01, .raw, .dd, .img, .iso, .vhd, .vmdk 지원)"
+                    ErrorMessage = $"지원하지 않는 이미지 확장자입니다 ({ext}). (E01 및 DD/RAW 포렌식 이미지 파일만 지원)"
                 };
             }
 
             try
             {
-                using var reader = CreateReader(filePath);
-                return FileSystemInspector.Inspect(reader);
+                Console.WriteLine("[C# DiskImageService] Calling NativeBridge.Engine_InspectForensicImage...");
+                // Call NativeEngine (libewf / libtsk engine)
+                int res = NativeBridge.Engine_InspectForensicImage(filePath, out var nativeOutput);
+                Console.WriteLine($"[C# DiskImageService] NativeBridge returned res={res}, isValid={nativeOutput.IsValid}, err={nativeOutput.ErrorMessage}");
+                if (res == 0 && nativeOutput.IsValid)
+                {
+                    var partitionList = new List<PartitionInfo>();
+                    for (int i = 0; i < nativeOutput.PartitionCount; i++)
+                    {
+                        var p = nativeOutput.Partitions[i];
+                        partitionList.Add(new PartitionInfo
+                        {
+                            PartitionIndex = p.PartitionIndex,
+                            SectorSize = p.SectorSize,
+                            StartSector = p.StartSector,
+                            SectorCount = p.SectorCount,
+                            Filesystem = p.Filesystem
+                        });
+                    }
+
+                    return new ImageInspectionResult
+                    {
+                        IsValidSupportedImage = true,
+                        ImageTypeTag = nativeOutput.ImageTypeTag,
+                        TotalImageSize = nativeOutput.TotalImageSize,
+                        TotalPartitionSize = nativeOutput.TotalPartitionSize,
+                        Partitions = partitionList
+                    };
+                }
+
+                return new ImageInspectionResult
+                {
+                    IsValidSupportedImage = false,
+                    ErrorMessage = !string.IsNullOrWhiteSpace(nativeOutput.ErrorMessage) ? nativeOutput.ErrorMessage : "Native C++ 포렌식 엔진 분석 실패"
+                };
             }
             catch (Exception ex)
             {
                 return new ImageInspectionResult
                 {
                     IsValidSupportedImage = false,
-                    ErrorMessage = $"이미지 파티션 파싱 중 오류가 발생했습니다: {ex.Message}"
+                    ErrorMessage = $"Native 포렌식 엔진 검사 오류: {ex.Message}"
                 };
+            }
+        }
+
+        public static ulong GetPhysicalImageFileSetSize(string primaryFilePath)
+        {
+            if (string.IsNullOrWhiteSpace(primaryFilePath) || !File.Exists(primaryFilePath)) return 0;
+
+            try
+            {
+                FileInfo fi = new FileInfo(primaryFilePath);
+                ulong totalSize = (ulong)fi.Length;
+
+                string ext = fi.Extension;
+                if (Regex.IsMatch(ext, @"\.(?:e\d{2}|ex\d{2}|e[a-z]{2}|\d{3,4})$", RegexOptions.IgnoreCase))
+                {
+                    string? dir = fi.DirectoryName;
+                    if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                    {
+                        string baseName = Path.GetFileNameWithoutExtension(primaryFilePath);
+                        var matchedFiles = Directory.GetFiles(dir, baseName + ".*");
+                        totalSize = 0;
+                        foreach (var f in matchedFiles)
+                        {
+                            FileInfo itemFi = new FileInfo(f);
+                            string itemExt = itemFi.Extension;
+                            if (Regex.IsMatch(itemExt, @"\.(?:e\d{2}|ex\d{2}|e[a-z]{2}|\d{3,4})$", RegexOptions.IgnoreCase))
+                            {
+                                totalSize += (ulong)itemFi.Length;
+                            }
+                        }
+                    }
+                }
+                return totalSize > 0 ? totalSize : (ulong)fi.Length;
+            }
+            catch
+            {
+                try { return (ulong)new FileInfo(primaryFilePath).Length; } catch { return 0; }
             }
         }
 
@@ -68,14 +147,10 @@ namespace WpfApp.Services
 
             try
             {
-                using var reader = CreateReader(filePath);
-                long totalBytes = 0;
-                try { totalBytes = reader.CalculateTotalSize(); } catch { }
-                if (totalBytes <= 0)
-                {
-                    try { totalBytes = new FileInfo(filePath).Length; } catch { }
-                }
-                double totalGb = totalBytes / (1024.0 * 1024.0 * 1024.0);
+                ulong physicalFileSizeBytes = GetPhysicalImageFileSetSize(filePath);
+                ulong logicalPartSizeBytes = inspection.TotalPartitionSize > 0 ? inspection.TotalPartitionSize :
+                                             (inspection.TotalImageSize > 0 ? inspection.TotalImageSize : physicalFileSizeBytes);
+                double totalGb = logicalPartSizeBytes / (1024.0 * 1024.0 * 1024.0);
 
                 var supportedFilesystems = inspection.Partitions
                     .Where(p => p.IsSupported && !string.IsNullOrWhiteSpace(p.Filesystem))
@@ -94,6 +169,8 @@ namespace WpfApp.Services
                     IsImageFile = true,
                     ImagePath = filePath,
                     ImageTypeTag = inspection.ImageTypeTag,
+                    ImageFileSizeBytes = physicalFileSizeBytes,
+                    TotalPartitionSizeBytes = logicalPartSizeBytes,
                     PartitionCount = Math.Max(1, inspection.SupportedPartitionCount),
                     PartitionTypes = fsTypesStr,
                     SerialNumber = filePath,

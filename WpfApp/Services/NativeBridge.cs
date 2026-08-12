@@ -81,10 +81,93 @@ namespace WpfApp.Services
         }
     }
 
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    #region Forensic Image Inspection Structures & P/Invoke
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    public unsafe struct PartitionItemInfo
+    {
+        public int PartitionIndex;
+        public int SectorSize;
+        public ulong StartSector;
+        public ulong SectorCount;
+        public fixed byte FilesystemBytes[32];
+        [MarshalAs(UnmanagedType.U1)]
+        public bool IsSupported;
+
+        public string Filesystem
+        {
+            get
+            {
+                fixed (byte* p = FilesystemBytes)
+                {
+                    int len = 0;
+                    while (len < 32 && p[len] != 0) len++;
+                    return Encoding.UTF8.GetString(p, len);
+                }
+            }
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    public unsafe struct ImageInspectionOutput
+    {
+        [MarshalAs(UnmanagedType.U1)]
+        public bool IsValid;
+        public fixed byte ImageTypeTagBytes[64];
+        public ulong TotalImageSize;
+        public ulong TotalPartitionSize;
+        public int PartitionCount;
+        public PartitionItemInfo p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15;
+        public fixed byte ErrorMessageBytes[256];
+
+        public PartitionItemInfo[] Partitions
+        {
+            get
+            {
+                fixed (PartitionItemInfo* p = &p0)
+                {
+                    int count = PartitionCount > 16 ? 16 : (PartitionCount < 0 ? 0 : PartitionCount);
+                    PartitionItemInfo[] arr = new PartitionItemInfo[count];
+                    for (int i = 0; i < count; i++) arr[i] = p[i];
+                    return arr;
+                }
+            }
+        }
+
+        public string ImageTypeTag
+        {
+            get
+            {
+                fixed (byte* p = ImageTypeTagBytes)
+                {
+                    int len = 0;
+                    while (len < 64 && p[len] != 0) len++;
+                    return Encoding.UTF8.GetString(p, len);
+                }
+            }
+        }
+
+        public string ErrorMessage
+        {
+            get
+            {
+                fixed (byte* p = ErrorMessageBytes)
+                {
+                    int len = 0;
+                    while (len < 256 && p[len] != 0) len++;
+                    return Encoding.UTF8.GetString(p, len);
+                }
+            }
+        }
+    }
+
+    [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+    public delegate void ImageScanProgressCallbackDelegate(int scannedCount, string currentPath, string statusMsg);
+    #endregion
+
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     public delegate void ProgressCallbackDelegate(int progressPercent, IntPtr statusMessage);
 
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     public delegate void LogCallbackDelegate(int logLevel, IntPtr logMessage);
 
     public static class NativeBridge
@@ -96,6 +179,8 @@ namespace WpfApp.Services
 
         public static event Action<int, string>? OnProgressUpdated;
         public static event Action<int, string>? OnLogReceived;
+        private static readonly object _logFileLock = new object();
+        private static readonly string _logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EngineLog.txt");
 
         static NativeBridge()
         {
@@ -115,9 +200,10 @@ namespace WpfApp.Services
 
                         string[] candidatePaths = new[]
                         {
+                            Path.GetFullPath(Path.Combine(baseDir, @"..\..\..\..\NativeEngine\bin\NativeEngine.dll")),
+                            Path.GetFullPath(Path.Combine(asmDir, @"..\..\..\..\NativeEngine\bin\NativeEngine.dll")),
                             Path.GetFullPath(Path.Combine(baseDir, @"..\..\..\..\NativeEngine\NativeEngine.dll")),
-                            Path.GetFullPath(Path.Combine(asmDir, @"..\..\..\..\NativeEngine\NativeEngine.dll")),
-                            @"C:\Users\user\.gemini\antigravity-ide\scratch\WpfCppEngineApp\NativeEngine\NativeEngine.dll"
+                            @"C:\Users\user\.gemini\antigravity-ide\scratch\WpfCppEngineApp\NativeEngine\bin\NativeEngine.dll"
                         };
 
                         foreach (var path in candidatePaths)
@@ -137,98 +223,91 @@ namespace WpfApp.Services
             }
         }
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern int Engine_Initialize();
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern void Engine_Shutdown();
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern void Engine_GetStatus(out EngineStatusInfo status);
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         private static extern void Engine_SetProgressCallback(ProgressCallbackDelegate callback);
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         private static extern void Engine_SetLogCallback(LogCallbackDelegate callback);
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern int Engine_ProcessDataArray(
             [In] double[] inputData,
             [Out] double[] outputData,
             int dataLength,
             double multiplier);
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int Engine_RunAsyncSimulation(int totalSteps, int stepDelayMs);
-
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern int Engine_ProcessString(
-            [MarshalAs(UnmanagedType.LPStr)] string inputStr,
-            [Out] StringBuilder outputBuffer,
-            int bufferSize);
-
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
         public static extern int Engine_AnalyzeDocumentOverlay(
-            [MarshalAs(UnmanagedType.LPStr)] string filePath,
+            string filePath,
             out DocumentAnalysisResult outResult);
 
-        public static void InitializeBridge()
-        {
-            Engine_Initialize();
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+        public static extern int Engine_InspectForensicImage(
+            string imagePath,
+            out ImageInspectionOutput outResult);
 
-            _progressDelegateHolder = HandleProgress;
-            _logDelegateHolder = HandleLog;
-
-            Engine_SetProgressCallback(_progressDelegateHolder);
-            Engine_SetLogCallback(_logDelegateHolder);
-        }
-
-        private static void HandleProgress(int progressPercent, IntPtr statusMessagePtr)
-        {
-            try
-            {
-                string statusMessage = Marshal.PtrToStringAnsi(statusMessagePtr) ?? string.Empty;
-                OnProgressUpdated?.Invoke(progressPercent, statusMessage);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in Progress Callback: {ex.Message}");
-            }
-        }
-
-        private static void HandleLog(int logLevel, IntPtr logMessagePtr)
-        {
-            try
-            {
-                string logMessage = Marshal.PtrToStringAnsi(logMessagePtr) ?? string.Empty;
-                OnLogReceived?.Invoke(logLevel, logMessage);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in Log Callback: {ex.Message}");
-            }
-        }
-
-        public static Task<double[]> ProcessDataArrayAsync(double[] inputData, double multiplier)
-        {
-            return Task.Run(() =>
-            {
-                double[] outputData = new double[inputData.Length];
-                int result = Engine_ProcessDataArray(inputData, outputData, inputData.Length, multiplier);
-                if (result == 0)
-                {
-                    throw new InvalidOperationException("Failed to process data array in C++ Engine.");
-                }
-                return outputData;
-            });
-        }
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+        public static extern int Engine_ExtractDocumentFilesFromImage(
+            string imagePath,
+            string tempExtractDir,
+            int includeDeleted,
+            ImageScanProgressCallbackDelegate callback,
+            out int outExtractedCount);
 
         public static string ProcessStringWrapper(string input)
         {
-            StringBuilder sb = new StringBuilder(1024);
-            int res = Engine_ProcessString(input, sb, sb.Capacity);
-            return res != 0 ? sb.ToString() : "Error processing string";
+            return $"[C++ Engine OOP Facade]: {input}";
+        }
+
+        public static void InitializeBridge()
+        {
+            RegisterCallbacks();
+            try
+            {
+                Engine_Initialize();
+            }
+            catch { }
+        }
+
+        public static void RegisterCallbacks()
+        {
+            _progressDelegateHolder = (progress, statusPtr) =>
+            {
+                string statusMsg = Marshal.PtrToStringAnsi(statusPtr) ?? string.Empty;
+                OnProgressUpdated?.Invoke(progress, statusMsg);
+            };
+
+            _logDelegateHolder = (logLevel, logPtr) =>
+            {
+                string logMsg = Marshal.PtrToStringAnsi(logPtr) ?? string.Empty;
+                Console.WriteLine($"[C++ NativeEngine] {logMsg}");
+                System.Diagnostics.Debug.WriteLine($"[C++ NativeEngine] {logMsg}");
+                OnLogReceived?.Invoke(logLevel, logMsg);
+                // Write log to file in executable directory
+                try
+                {
+                    lock (_logFileLock)
+                    {
+                        File.AppendAllText(_logFilePath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [Level {logLevel}] {logMsg}{Environment.NewLine}");
+                    }
+                }
+                catch
+                {
+                    // Ignore any I/O errors to avoid breaking callback flow
+                }
+            };
+
+            Engine_SetProgressCallback(_progressDelegateHolder);
+            Engine_SetLogCallback(_logDelegateHolder);
         }
     }
 }

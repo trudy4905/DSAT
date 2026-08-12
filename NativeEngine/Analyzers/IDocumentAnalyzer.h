@@ -1,7 +1,7 @@
 #ifndef I_DOCUMENT_ANALYZER_H
 #define I_DOCUMENT_ANALYZER_H
 
-#include "../Types.h"
+#include "../NativeEngineApi.h"
 #include <string>
 #include <cstdio>
 

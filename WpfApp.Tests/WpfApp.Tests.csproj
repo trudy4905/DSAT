@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\NativeEngine\NativeEngine.dll">
+    <None Include="..\NativeEngine\bin\NativeEngine.dll">
       <Link>NativeEngine.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

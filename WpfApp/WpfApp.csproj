@@ -7,21 +7,39 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <PlatformTarget>x64</PlatformTarget>
+    <Platform>x64</Platform>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
     <Resource Include="Resources\app_icon.png" />
-    <None Include="..\NativeEngine\NativeEngine.dll">
+    <None Include="..\NativeEngine\bin\NativeEngine.dll">
       <Link>NativeEngine.dll</Link>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NativeEngine\bin\NativeEngine.pdb">
+      <Link>NativeEngine.pdb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NativeEngine\bin\libewf.dll">
+      <Link>libewf.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NativeEngine\bin\zlib.dll">
+      <Link>zlib.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NativeEngine\bin\libtsk_jni.dll">
+      <Link>libtsk_jni.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
-  <!-- Always build C++ NativeEngine first before building WpfApp -->
-  <Target Name="BuildNativeEngineDll" BeforeTargets="BeforeBuild">
-    <Exec Command="cmd /c build_dll.bat" WorkingDirectory="$(MSBuildProjectDirectory)\..\NativeEngine" IgnoreExitCode="true" />
-  </Target>
+  <!-- Enable mixed (managed + native) debugging when launching the WPF app from Visual Studio -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Management" Version="7.0.0" />

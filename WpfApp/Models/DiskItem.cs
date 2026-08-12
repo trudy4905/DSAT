@@ -48,24 +48,36 @@ namespace WpfApp.Models
         public bool IsImageFile { get; set; }
         public string ImagePath { get; set; } = string.Empty;
         public string ImageTypeTag { get; set; } = string.Empty; // e.g. "E01", "RAW", "DD"
+        public ulong ImageFileSizeBytes { get; set; }
+        public ulong TotalPartitionSizeBytes { get; set; }
         public int PartitionCount { get; set; } = 1;
         public string PartitionTypes { get; set; } = string.Empty; // e.g. "NTFS", "FAT32"
 
         public string PartitionCountFormatted => $"{PartitionCount}개";
         public string PartitionInfoFormatted => string.IsNullOrEmpty(PartitionTypes) ? $"{PartitionCount}개" : $"{PartitionCount}개 ({PartitionTypes})";
+
+        public string ImageFileSizeFormatted => FormatBytes(ImageFileSizeBytes > 0 ? ImageFileSizeBytes : (ulong)(TotalSizeGb * 1024.0 * 1024.0 * 1024.0));
+        public string TotalPartitionSizeFormatted => FormatBytes(TotalPartitionSizeBytes > 0 ? TotalPartitionSizeBytes : ImageFileSizeBytes);
+
+        public static string FormatBytes(ulong bytes)
+        {
+            if (bytes >= 1024L * 1024L * 1024L * 1024L)
+                return $"{bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0):F2} TB";
+            if (bytes >= 1024L * 1024L * 1024L)
+                return $"{bytes / (1024.0 * 1024.0 * 1024.0):F2} GB";
+            if (bytes >= 1024L * 1024L)
+                return $"{bytes / (1024.0 * 1024.0):F1} MB";
+            if (bytes >= 1024L)
+                return $"{bytes / 1024.0:F0} KB";
+            return $"{bytes} B";
+        }
+
         public string ImageFormatName
         {
             get
             {
                 if (string.IsNullOrEmpty(ImageTypeTag)) return "이미지 파일";
-                string tagUpper = ImageTypeTag.ToUpperInvariant();
-                return tagUpper switch
-                {
-                    "E01" or "EX01" => "Encase 이미지 파일",
-                    "RAW" or "DD" or "IMG" => "RAW 이미지 파일",
-                    "VHD" or "VMDK" => "가상 디스크 이미지",
-                    _ => $"{tagUpper} 이미지 파일"
-                };
+                return ImageTypeTag;
             }
         }
 

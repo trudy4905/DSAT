@@ -179,7 +179,10 @@ namespace WpfApp.ViewModels
                     }
 
                     _selectedDisk = value;
-                    if (_selectedDisk != null) _selectedDisk.IsSelected = true;
+                    if (_selectedDisk != null)
+                    {
+                        _selectedDisk.IsSelected = true;
+                    }
 
                     OnPropertyChanged();
                     (GoToNextStepCommand as RelayCommand)?.RaiseCanExecuteChanged();
@@ -299,8 +302,8 @@ namespace WpfApp.ViewModels
         {
             var openFileDialog = new OpenFileDialog
             {
-                Title = "이미지 파일 선택",
-                Filter = "Disk Image Files (*.E01;*.Ex01;*.dd)|*.E01;*.Ex01;*.dd|EnCase Image (*.E01;*.Ex01)|*.E01;*.Ex01|RAW Disk Image (*.dd)|*.dd|All Files (*.*)|*.*",
+                Title = "포렌식 이미지 파일 선택 (E01, DD)",
+                Filter = "포렌식 디스크 이미지 (*.E01;*.Ex01;*.raw;*.dd;*.001)|*.E01;*.Ex01;*.raw;*.dd;*.001|EnCase 이미지 (*.E01;*.Ex01)|*.E01;*.Ex01|RAW/DD 이미지 (*.raw;*.dd;*.001)|*.raw;*.dd;*.001|모든 파일 (*.*)|*.*",
                 Multiselect = false
             };
 

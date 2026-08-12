@@ -85,55 +85,60 @@ namespace WpfApp.ViewModels
 
             OpenFileCommand = new RelayCommand(_ =>
             {
-                if (SelectedFile != null && File.Exists(SelectedFile.FilePath))
+                if (SelectedFile == null) return;
+                // 포렌식 이미지에서 추출된 경우 TempExtractPath, 일반 파일은 FilePath 사용
+                string openPath = !string.IsNullOrEmpty(SelectedFile.TempExtractPath) && File.Exists(SelectedFile.TempExtractPath)
+                    ? SelectedFile.TempExtractPath
+                    : SelectedFile.FilePath;
+                if (!File.Exists(openPath)) return;
+                try
                 {
-                    try
+                    // Create safe temp directory for forensic replica viewing
+                    string tempDir = Path.Combine(Path.GetTempPath(), "DSAT_SafeReplica");
+                    Directory.CreateDirectory(tempDir);
+
+                    string safeFileName = $"SafeCopy_{Guid.NewGuid().ToString("N")[..8]}_{Path.GetFileName(openPath)}";
+                    string tempCopyPath = Path.Combine(tempDir, safeFileName);
+
+                    // Copy original file to temp directory (Preserves original evidence metadata)
+                    File.Copy(openPath, tempCopyPath, overwrite: true);
+
+                    // Set ReadOnly attribute on temp copy
+                    File.SetAttributes(tempCopyPath, FileAttributes.ReadOnly);
+
+                    Process.Start(new ProcessStartInfo
                     {
-                        // Create safe temp directory for forensic replica viewing
-                        string tempDir = Path.Combine(Path.GetTempPath(), "DSAT_SafeReplica");
-                        Directory.CreateDirectory(tempDir);
-
-                        string safeFileName = $"SafeCopy_{Guid.NewGuid().ToString("N")[..8]}_{Path.GetFileName(SelectedFile.FilePath)}";
-                        string tempCopyPath = Path.Combine(tempDir, safeFileName);
-
-                        // Copy original file to temp directory (Preserves original evidence metadata)
-                        File.Copy(SelectedFile.FilePath, tempCopyPath, overwrite: true);
-
-                        // Set ReadOnly attribute on temp copy
-                        File.SetAttributes(tempCopyPath, FileAttributes.ReadOnly);
-
-                        Process.Start(new ProcessStartInfo
-                        {
-                            FileName = tempCopyPath,
-                            UseShellExecute = true
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"파일 열기 실패: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
+                        FileName = tempCopyPath,
+                        UseShellExecute = true
+                    });
                 }
-            }, _ => SelectedFile != null && File.Exists(SelectedFile?.FilePath));
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"파일 열기 실패: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }, _ => SelectedFile != null && (!string.IsNullOrEmpty(SelectedFile?.TempExtractPath) && File.Exists(SelectedFile?.TempExtractPath) || File.Exists(SelectedFile?.FilePath ?? string.Empty)));
 
             OpenFolderCommand = new RelayCommand(_ =>
             {
-                if (SelectedFile != null && File.Exists(SelectedFile.FilePath))
+                if (SelectedFile == null) return;
+                string openPath = !string.IsNullOrEmpty(SelectedFile.TempExtractPath) && File.Exists(SelectedFile.TempExtractPath)
+                    ? SelectedFile.TempExtractPath
+                    : SelectedFile.FilePath;
+                if (!File.Exists(openPath)) return;
+                try
                 {
-                    try
+                    Process.Start(new ProcessStartInfo
                     {
-                        Process.Start(new ProcessStartInfo
-                        {
-                            FileName = "explorer.exe",
-                            Arguments = $"/select,\"{SelectedFile.FilePath}\"",
-                            UseShellExecute = true
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"폴더 열기 실패: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
+                        FileName = "explorer.exe",
+                        Arguments = $"/select,\"{openPath}\"",
+                        UseShellExecute = true
+                    });
                 }
-            }, _ => SelectedFile != null && File.Exists(SelectedFile?.FilePath));
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"폴더 열기 실패: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }, _ => SelectedFile != null && (!string.IsNullOrEmpty(SelectedFile?.TempExtractPath) && File.Exists(SelectedFile?.TempExtractPath) || File.Exists(SelectedFile?.FilePath ?? string.Empty)));
 
             CopyTextCommand = new RelayCommand(_ =>
             {
@@ -149,7 +154,9 @@ namespace WpfApp.ViewModels
 
             ExportSelectedFilesCommand = new RelayCommand(_ =>
             {
-                var targetFiles = FilteredFileList.Where(x => x.IsSelectedForExport && File.Exists(x.FilePath)).ToList();
+                // TempExtractPath(포렌식 추출 파일) 또는 FilePath(일반 파일) 존재하는 파일만 포함
+                var targetFiles = FilteredFileList.Where(x => x.IsSelectedForExport &&
+                    ((!string.IsNullOrEmpty(x.TempExtractPath) && File.Exists(x.TempExtractPath)) || File.Exists(x.FilePath))).ToList();
                 if (targetFiles.Count == 0)
                 {
                     Application.Current.Dispatcher.Invoke(() =>
@@ -178,6 +185,11 @@ namespace WpfApp.ViewModels
                     {
                         try
                         {
+                            // 실제 파일 경로: TempExtractPath(포렌식 추출) 우선, 없으면 FilePath
+                            string sourcePath = !string.IsNullOrEmpty(file.TempExtractPath) && File.Exists(file.TempExtractPath)
+                                ? file.TempExtractPath
+                                : file.FilePath;
+
                             string destFileName = file.FileName;
                             string destPath = Path.Combine(targetFolder, destFileName);
 
@@ -190,7 +202,7 @@ namespace WpfApp.ViewModels
                                 destPath = Path.Combine(targetFolder, $"{fileNoExt}_{counter++}{ext}");
                             }
 
-                            File.Copy(file.FilePath, destPath, overwrite: true);
+                            File.Copy(sourcePath, destPath, overwrite: true);
                             successCount++;
                         }
                         catch
@@ -270,20 +282,48 @@ namespace WpfApp.ViewModels
 
         public void InitializeResults(IEnumerable<HwpFileItem> results)
         {
-            foreach (var item in FileList)
+            var list = results.ToList();
+            
+            // Check if FileList already has the exact same items (from live streaming)
+            bool needsRebuild = FileList.Count != list.Count;
+            if (!needsRebuild)
             {
-                item.PropertyChanged -= Item_PropertyChanged;
+                for (int i = 0; i < list.Count; i++)
+                {
+                    if (FileList[i] != list[i])
+                    {
+                        needsRebuild = true;
+                        break;
+                    }
+                }
             }
 
-            FileList.Clear();
-            foreach (var item in results)
+            if (needsRebuild)
             {
-                item.PropertyChanged += Item_PropertyChanged;
-                FileList.Add(item);
+                foreach (var item in FileList)
+                {
+                    item.PropertyChanged -= Item_PropertyChanged;
+                }
+
+                FileList.Clear();
+                foreach (var item in list)
+                {
+                    item.PropertyChanged += Item_PropertyChanged;
+                    FileList.Add(item);
+                }
             }
+            else
+            {
+                foreach (var item in FileList)
+                {
+                    item.PropertyChanged -= Item_PropertyChanged;
+                    item.PropertyChanged += Item_PropertyChanged;
+                }
+            }
+
             ApplyFileFilter();
 
-            if (FilteredFileList.Count > 0)
+            if (SelectedFile == null && FilteredFileList.Count > 0)
             {
                 SelectedFile = FilteredFileList.First();
             }
@@ -518,13 +558,17 @@ namespace WpfApp.ViewModels
             PreviewFileSize = fileItem.FileSizeFormatted;
             PreviewLastModified = fileItem.LastModifiedFormatted;
 
+            string targetPath = !string.IsNullOrEmpty(fileItem.TempExtractPath) && File.Exists(fileItem.TempExtractPath)
+                ? fileItem.TempExtractPath
+                : fileItem.FilePath;
+
             if (fileItem.Extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
             {
                 IsPdfPreview = true;
                 PreviewFormatType = "PDF";
                 try
                 {
-                    PreviewUri = new Uri(fileItem.FilePath);
+                    PreviewUri = new Uri(targetPath);
                 }
                 catch { }
                 IsPreviewLoading = false;
@@ -536,21 +580,23 @@ namespace WpfApp.ViewModels
 
             try
             {
-                var result = await DocumentPreviewService.ExtractTextAsync(fileItem.FilePath);
+                var result = await DocumentPreviewService.ExtractTextAsync(targetPath);
 
                 PreviewFormatType = result.FormatType;
                 PreviewText = result.ContentText;
                 PreviewLineCount = result.LineCount;
                 PreviewCharCount = result.CharCount;
 
-                PreviewHtmlContent = HwpHtmlDocumentGenerator.GenerateHwpHtmlDocument(
+                string html = await Task.Run(() => HwpHtmlDocumentGenerator.GenerateHwpHtmlDocument(
                     fileItem.FileName, 
                     result.ContentText, 
                     result.FormatType, 
                     fileItem.FilePath, 
                     fileItem.FileSizeFormatted, 
                     fileItem.LastModifiedFormatted
-                );
+                ));
+
+                PreviewHtmlContent = html;
             }
             catch (Exception ex)
             {

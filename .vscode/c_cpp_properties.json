@@ -3,13 +3,16 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/NativeEngine/**"
+                "${workspaceFolder}/NativeEngine/**",
+                "${workspaceFolder}/NativeEngine/3rdparty/sleuthkit/include",
+                "${workspaceFolder}/NativeEngine/3rdparty/libewf/include"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE",
-                "ENGINE_EXPORTS"
+                "ENGINE_EXPORTS",
+                "NATIVEENGINE_EXPORTS"
             ],
             "compilerPath": "cl.exe",
             "cStandard": "c17",

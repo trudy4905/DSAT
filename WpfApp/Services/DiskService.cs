@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Management;
 using WpfApp.Models;
-using WpfApp.Services.Readers;
 
 namespace WpfApp.Services
 {
@@ -70,9 +69,7 @@ namespace WpfApp.Services
                         double freeGb  = 0;
                         try
                         {
-                            using var reader = new PhysicalDiskReader(drive.Name);
-                            long totalBytes = reader.CalculateTotalSize();
-                            totalGb = totalBytes / (1024.0 * 1024.0 * 1024.0);
+                            totalGb = drive.TotalSize / (1024.0 * 1024.0 * 1024.0);
                             freeGb  = drive.AvailableFreeSpace / (1024.0 * 1024.0 * 1024.0);
                         }
                         catch { }

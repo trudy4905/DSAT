@@ -8,6 +8,8 @@ namespace WpfApp.Models
         public bool IsValidSupportedImage { get; set; }
         public string ErrorMessage { get; set; } = string.Empty;
         public string ImageTypeTag { get; set; } = string.Empty;
+        public ulong TotalImageSize { get; set; }
+        public ulong TotalPartitionSize { get; set; }
         public List<PartitionInfo> Partitions { get; set; } = new List<PartitionInfo>();
 
         public int TotalPartitionCount => Partitions.Count;

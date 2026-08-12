@@ -11,7 +11,7 @@ namespace WpfApp.Services
 {
     /// <summary>
     /// 디스크 및 이미지 파일 탐색기 (Document File System & Image Partition Scanner)
-    /// 순수 파일 탐색 및 순회(Traversal)를 담당하며, 검사된 문서 결과는 DocumentRiskEvaluator를 통해 통합 평가합니다.
+    /// Native Engine(libewf/libtsk)을 활용하여 이미지 내 파티션 및 문서 파일들을 100% 추출/분석합니다.
     /// </summary>
     public class DocumentFileScannerService
     {
@@ -36,10 +36,11 @@ namespace WpfApp.Services
             }
             else if (targetDisk.IsImageFile)
             {
-                return await ScanImageTargetAsync(targetDisk, progress, cancellationToken);
+                return await ScanImageTargetAsync(targetDisk, false, progress, cancellationToken);
             }
             else
             {
+                // Standard Live File System Scan (Fast OS Directory Traversal)
                 string targetDir = targetDisk.DriveLetter;
                 if (!Directory.Exists(targetDir))
                 {
@@ -48,6 +49,22 @@ namespace WpfApp.Services
 
                 return await ScanLocalDirectoryAsync(targetDir, progress, cancellationToken);
             }
+        }
+
+        private static string ConvertDriveToDevicePath(DiskItem disk)
+        {
+            if (!string.IsNullOrEmpty(disk.ImagePath)) return disk.ImagePath;
+            string letter = disk.DriveLetter;
+            if (string.IsNullOrWhiteSpace(letter)) return string.Empty;
+
+            if (letter.StartsWith(@"\\.\", StringComparison.OrdinalIgnoreCase)) return letter;
+
+            string trimmed = letter.TrimEnd('\\', '/');
+            if (trimmed.Length == 2 && trimmed[1] == ':')
+            {
+                return $@"\\.\{trimmed}";
+            }
+            return letter;
         }
 
         #region Direct Selected Files Scan
@@ -78,7 +95,8 @@ namespace WpfApp.Services
                     FileSizeBytes = file.Length,
                     CreatedTime = file.CreationTime,
                     LastModified = file.LastWriteTime,
-                    TextSnippet = "분석 중..."
+                    TextSnippet = "분석 중...",
+                    IsDeleted = false
                 };
 
                 AnalyzeAndEvaluateFile(item);
@@ -91,38 +109,120 @@ namespace WpfApp.Services
         }
         #endregion
 
-        #region Forensic Image File Scan
+        #region Forensic Image File Scan (Native libewf / libtsk Engine)
         private async Task<List<HwpFileItem>> ScanImageTargetAsync(
             DiskItem imageDisk,
+            bool includeDeleted,
             IProgress<(int scannedDirs, string currentFolder, HwpFileItem? foundFile)>? progress,
             CancellationToken cancellationToken)
         {
             var resultList = new List<HwpFileItem>();
-            int scannedDirs = 0;
 
             string imagePath = imageDisk.ImagePath;
-            string imageFileName = Path.GetFileName(imagePath);
 
-            var inspection = DiskImageService.InspectImageFileSystems(imagePath);
-            var supportedPartitions = inspection.Partitions.Where(p => p.IsSupported).ToList();
+            string tempExtractDir = Path.Combine(Path.GetTempPath(), "DSAT_Forensic_Extracted", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempExtractDir);
 
-            if (supportedPartitions.Count == 0)
+            progress?.Report((1, "Native C++ 포렌식 디스크 엔진 스캔 시작...", null));
+
+            await Task.Run(() =>
             {
-                progress?.Report((1, $"{imageFileName} - 호환되는 파티션이 없습니다.", null));
-                return resultList;
-            }
+                // C++에서: currentPath = 실제 임시 추출 경로, statusMsg = "FILE:IS_DELETED:1:가상경로"
+                ImageScanProgressCallbackDelegate cb = (scannedCount, currentPath, statusMsg) =>
+                {
+                    if (cancellationToken.IsCancellationRequested) return;
 
-            foreach (var part in supportedPartitions)
-            {
-                if (cancellationToken.IsCancellationRequested) break;
+                    if (scannedCount < 0 || statusMsg == "SCANNING_DIR")
+                    {
+                        // 디렉토리 탐색 진행 상황
+                        string folderPath = string.IsNullOrEmpty(currentPath)
+                            ? "\\"
+                            : (currentPath.StartsWith("\\") || currentPath.StartsWith("/") ? currentPath.Replace('/', '\\') : $"\\{currentPath.Replace('/', '\\')}");
+                        progress?.Report((-1, folderPath, null));
+                        return;
+                    }
 
-                scannedDirs++;
-                string partitionTag = $"[{imageFileName}: Partition {part.PartitionIndex} ({part.Filesystem})]";
-                progress?.Report((scannedDirs, $"{partitionTag} - 파티션 파일시스템 분석 중...", null));
-                await Task.Delay(200, cancellationToken);
+                    // statusMsg가 "FILE:" 형식인지 확인
+                    string virtualPath = string.Empty;
+                    bool isDeleted = false;
+                    if (statusMsg != null && statusMsg.StartsWith("FILE:", StringComparison.Ordinal))
+                    {
+                        string payload = statusMsg.Substring(5);
+                        if (payload.StartsWith("IS_DELETED:1:", StringComparison.Ordinal))
+                        {
+                            isDeleted = true;
+                            virtualPath = payload.Substring(13);
+                        }
+                        else if (payload.StartsWith("IS_DELETED:0:", StringComparison.Ordinal))
+                        {
+                            isDeleted = false;
+                            virtualPath = payload.Substring(13);
+                        }
+                        else
+                        {
+                            virtualPath = payload;
+                        }
+                    }
 
-                progress?.Report((scannedDirs, $"{partitionTag} - 탐색 완료", null));
-            }
+                    // currentPath = 실제 temp 파일 경로 → FileInfo로 파일 크기/날짜 읽기
+                    string realTempPath = currentPath;
+                    string ext = Path.GetExtension(virtualPath.Length > 0 ? virtualPath : realTempPath).ToLowerInvariant();
+
+                    // 원본 파일명: 가상 경로에서 추출 (한글 파일명 포함)
+                    string originalFileName = virtualPath.Length > 0
+                        ? Path.GetFileName(virtualPath)
+                        : Path.GetFileName(realTempPath);
+
+                    long fileSize = 0;
+                    DateTime cTime = DateTime.MinValue;
+                    DateTime mTime = DateTime.MinValue;
+
+                    try
+                    {
+                        var fi = new FileInfo(realTempPath);
+                        if (fi.Exists)
+                        {
+                            fileSize = fi.Length;
+                            cTime = fi.CreationTime;
+                            mTime = fi.LastWriteTime;
+                        }
+                    }
+                    catch { }
+
+                    var item = new HwpFileItem
+                    {
+                        FileName = originalFileName,
+                        FilePath = realTempPath,       // 분석용 실제 경로 (나중에 UI 경로로 교체)
+                        TempExtractPath = realTempPath, // 파일 열기/내보내기에 사용
+                        Extension = ext,
+                        FileSizeBytes = fileSize,
+                        CreatedTime = cTime == DateTime.MinValue ? DateTime.Now : cTime,
+                        LastModified = mTime == DateTime.MinValue ? DateTime.Now : mTime,
+                        TextSnippet = "분석 중...",
+                        VirtualPath = virtualPath.Length > 0 ? virtualPath : string.Empty,
+                        IsDeleted = isDeleted
+                    };
+
+                    // 실제 temp 경로로 문서 오버레이 및 악성 여부 분석 수행
+                    AnalyzeAndEvaluateFile(item);
+
+                    // UI 표시 경로: 이미지 내부 가상 경로 형식 (예: \문서\보고서.hwp)
+                    string displayVirtual = string.IsNullOrEmpty(item.VirtualPath)
+                        ? item.FileName
+                        : item.VirtualPath.TrimStart('/', '\\').Replace('/', '\\');
+                    item.FilePath = displayVirtual.StartsWith("\\") ? displayVirtual : $"\\{displayVirtual}";
+
+                    lock (resultList)
+                    {
+                        resultList.Add(item);
+                    }
+
+                    progress?.Report((scannedCount, $"{item.FileName} 분석 완료", item));
+                };
+
+                int includeDeletedFlag = includeDeleted ? 1 : 0;
+                NativeBridge.Engine_ExtractDocumentFilesFromImage(imagePath, tempExtractDir, includeDeletedFlag, cb, out var outCount);
+            }, cancellationToken);
 
             return resultList;
         }
@@ -196,8 +296,7 @@ namespace WpfApp.Services
                     {
                         if (cancellationToken.IsCancellationRequested) break;
 
-                        if ((subDir.Attributes & FileAttributes.Hidden) != 0 ||
-                            (subDir.Attributes & FileAttributes.System) != 0 ||
+                        if ((subDir.Attributes & FileAttributes.ReparsePoint) != 0 ||
                             SkipFolders.Contains(subDir.Name))
                         {
                             continue;
@@ -220,13 +319,15 @@ namespace WpfApp.Services
         #region Helper: C++ Native Analysis & Risk Evaluation
         private static void AnalyzeAndEvaluateFile(HwpFileItem item)
         {
+            string realPath = !string.IsNullOrEmpty(item.TempExtractPath) && File.Exists(item.TempExtractPath)
+                ? item.TempExtractPath
+                : item.FilePath;
+
             try
             {
-                // 1) C++ Native Engine 파서 호출
-                int res = NativeBridge.Engine_AnalyzeDocumentOverlay(item.FilePath, out var analysis);
+                int res = NativeBridge.Engine_AnalyzeDocumentOverlay(realPath, out var analysis);
                 if (res != 0)
                 {
-                    // 2) 통합 위험도 평가 모듈(DocumentRiskEvaluator) 호출
                     DocumentRiskEvaluator.EvaluateDocument(item, analysis);
                 }
                 else
@@ -241,7 +342,6 @@ namespace WpfApp.Services
                 item.RiskLevel = 1;
             }
 
-            // 3) 한글 파일(.hwp, .hwpx)만 리스트 본문 요약 수집, 나머지는 "- "
             bool isHwpFile = item.Extension.Equals(".hwp", StringComparison.OrdinalIgnoreCase) ||
                              item.Extension.Equals(".hwpx", StringComparison.OrdinalIgnoreCase);
 
@@ -251,7 +351,7 @@ namespace WpfApp.Services
                 {
                     try
                     {
-                        var preview = await DocumentPreviewService.ExtractTextAsync(item.FilePath);
+                        var preview = await DocumentPreviewService.ExtractTextAsync(realPath);
                         if (preview.Success && !string.IsNullOrWhiteSpace(preview.ContentText))
                         {
                             string cleanText = preview.ContentText.Replace("\r", " ").Replace("\n", " ");

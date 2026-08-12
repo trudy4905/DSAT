@@ -1,8 +1,7 @@
 #ifndef ENGINE_STATUS_MANAGER_H
 #define ENGINE_STATUS_MANAGER_H
 
-#include "../Types.h"
-#include "../Engine.h"
+#include "../NativeEngineApi.h"
 #include <atomic>
 #include <mutex>
 
