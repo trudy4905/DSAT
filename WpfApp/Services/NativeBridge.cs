@@ -21,8 +21,8 @@ namespace WpfApp.Services
         None = 0,
         Overlay = 1,
         MacroScript = 2,
-        StructureAnomaly = 3,
-        EncryptedStream = 4
+        EncryptedStream = 3,
+        OleSlack = 4
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 8)]

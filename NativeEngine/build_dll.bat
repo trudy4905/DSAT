@@ -38,8 +38,8 @@ cl.exe /LD /DNATIVEENGINE_EXPORTS /DENGINE_EXPORTS /utf-8 /Zi /Od /RTC1 /EHsc /W
   Analyzers\DocumentAnalyzerBase.cpp ^
   Analyzers\HwpDocumentAnalyzer.cpp ^
   Analyzers\Hwp\CheckHwpOleOverlay.cpp ^
+  Analyzers\Hwp\CheckHwpOleSlack.cpp ^
   Analyzers\Hwp\CheckHwpMacro.cpp ^
-  Analyzers\Hwp\CheckHwpStructure.cpp ^
   Analyzers\HwpxDocumentAnalyzer.cpp ^
   Analyzers\Hwpx\CheckHwpxZipOverlay.cpp ^
   Analyzers\PdfDocumentAnalyzer.cpp ^

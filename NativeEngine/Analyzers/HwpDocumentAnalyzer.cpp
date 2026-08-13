@@ -1,7 +1,7 @@
 #include "HwpDocumentAnalyzer.h"
 #include "Hwp/CheckHwpMacro.h"
 #include "Hwp/CheckHwpOleOverlay.h"
-#include "Hwp/CheckHwpStructure.h"
+#include "Hwp/CheckHwpOleSlack.h"
 #include <cstring>
 #include <vector>
 
@@ -19,14 +19,14 @@ bool HwpDocumentAnalyzer::Analyze(FILE *fp, uint64_t fileSize,
     findings.push_back(f1);
   }
 
-  // 기법 2: VBA/JScript 매크로 탐지
-  DetectionFinding f2 = CheckHwpMacro(fp, fileSize);
+  // 기법 2: OLE 컨테이너 슬랙/은닉 탐지
+  DetectionFinding f2 = CheckHwpOleSlack(fp, fileSize);
   if (f2.detected) {
     findings.push_back(f2);
   }
 
-  // 기법 3: 문서 구조 변조 탐지
-  DetectionFinding f3 = CheckHwpStructure(fp, fileSize);
+  // 기법 3: VBA/JScript 매크로 탐지
+  DetectionFinding f3 = CheckHwpMacro(fp, fileSize);
   if (f3.detected) {
     findings.push_back(f3);
   }

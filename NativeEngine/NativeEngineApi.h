@@ -30,8 +30,8 @@ typedef enum {
     RULE_TYPE_NONE = 0,
     RULE_TYPE_OVERLAY = 1,
     RULE_TYPE_MACRO_SCRIPT = 2,
-    RULE_TYPE_STRUCTURE_ANOMALY = 3,
-    RULE_TYPE_ENCRYPTED_STREAM = 4
+    RULE_TYPE_ENCRYPTED_STREAM = 3,
+    RULE_TYPE_OLE_SLACK = 4
 } DetectionRuleType;
 
 typedef struct {

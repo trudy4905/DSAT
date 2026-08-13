@@ -167,7 +167,12 @@
                             </DataGridTemplateColumn>
 
                             <!-- 2. 파일명 (FileName) -->
-                            <DataGridTemplateColumn Header="파일명" Width="200" SortMemberPath="FileName">
+                            <DataGridTemplateColumn Width="200" SortMemberPath="FileName">
+                                <DataGridTemplateColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DataContext.HeaderFileName, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.HeaderTemplate>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding FileName}" FontSize="12" FontWeight="Bold" Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
@@ -176,7 +181,12 @@
                             </DataGridTemplateColumn>
 
                             <!-- 3. 크기 (FileSizeFormatted) -->
-                            <DataGridTemplateColumn Header="크기" Width="95" SortMemberPath="FileSizeBytes">
+                            <DataGridTemplateColumn Width="95" SortMemberPath="FileSizeBytes">
+                                <DataGridTemplateColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DataContext.HeaderFileSize, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.HeaderTemplate>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding FileSizeFormatted}" FontSize="11" Foreground="#475569" HorizontalAlignment="Right"/>
@@ -185,7 +195,12 @@
                             </DataGridTemplateColumn>
 
                             <!-- 4. 확장자 (Extension) -->
-                            <DataGridTemplateColumn Header="확장자" Width="85" SortMemberPath="Extension">
+                            <DataGridTemplateColumn Width="85" SortMemberPath="Extension">
+                                <DataGridTemplateColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DataContext.HeaderExtension, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.HeaderTemplate>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Extension}" FontSize="12" Foreground="#475569" HorizontalAlignment="Center"/>
@@ -194,7 +209,12 @@
                             </DataGridTemplateColumn>
 
                             <!-- 5. 분석 결과 (Status - 경로 왼쪽 위치) -->
-                            <DataGridTemplateColumn Header="분석 결과 ▼" Width="Auto" SortMemberPath="StatusText">
+                            <DataGridTemplateColumn Width="Auto" SortMemberPath="StatusText">
+                                <DataGridTemplateColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DataContext.HeaderStatus, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.HeaderTemplate>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="4" Padding="8,3" Background="{Binding StatusBadgeColor}" HorizontalAlignment="Left">
@@ -205,7 +225,12 @@
                             </DataGridTemplateColumn>
 
                             <!-- 6. 경로 (FilePath) -->
-                            <DataGridTemplateColumn Header="경로" Width="280" SortMemberPath="FilePath">
+                            <DataGridTemplateColumn Width="280" SortMemberPath="FilePath">
+                                <DataGridTemplateColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DataContext.HeaderFilePath, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.HeaderTemplate>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding FilePath}" FontSize="11" Foreground="#475569" TextTrimming="CharacterEllipsis"/>
@@ -214,7 +239,12 @@
                             </DataGridTemplateColumn>
 
                             <!-- 7. 만든시간 (CreatedTimeFormatted) -->
-                            <DataGridTemplateColumn Header="만든시간" Width="135" SortMemberPath="CreatedTime">
+                            <DataGridTemplateColumn Width="135" SortMemberPath="CreatedTime">
+                                <DataGridTemplateColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DataContext.HeaderCreatedTime, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.HeaderTemplate>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding CreatedTimeFormatted}" FontSize="11" Foreground="#64748B" HorizontalAlignment="Center"/>
@@ -223,7 +253,12 @@
                             </DataGridTemplateColumn>
 
                             <!-- 8. 수정시간 (LastModifiedFormatted) -->
-                            <DataGridTemplateColumn Header="수정시간" Width="135" SortMemberPath="LastModified">
+                            <DataGridTemplateColumn Width="135" SortMemberPath="LastModified">
+                                <DataGridTemplateColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DataContext.HeaderLastModified, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.HeaderTemplate>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding LastModifiedFormatted}" FontSize="11" Foreground="#64748B" HorizontalAlignment="Center"/>
@@ -232,7 +267,12 @@
                             </DataGridTemplateColumn>
 
                             <!-- 9. 본문 미리보기 (TextSnippet) -->
-                            <DataGridTemplateColumn Header="본문 미리보기" Width="450" SortMemberPath="TextSnippet">
+                            <DataGridTemplateColumn Width="450" SortMemberPath="TextSnippet">
+                                <DataGridTemplateColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DataContext.HeaderTextSnippet, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.HeaderTemplate>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding TextSnippet}" FontSize="11" Foreground="#3B82F6" FontStyle="Italic" TextTrimming="CharacterEllipsis"/>

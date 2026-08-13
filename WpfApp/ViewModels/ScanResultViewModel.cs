@@ -354,6 +354,7 @@ namespace WpfApp.ViewModels
                 _isSortAscending = true;
             }
             ApplyFileFilter();
+            NotifyHeaderPropertiesChanged();
         }
 
         private void ApplyFileFilter()

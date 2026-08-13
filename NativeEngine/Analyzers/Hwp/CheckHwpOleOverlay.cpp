@@ -30,6 +30,10 @@ DetectionFinding CheckHwpOleOverlay(FILE *fp, uint64_t fileSize,
   if (sectorSize < 512 || sectorSize > 4096)
     sectorSize = 512;
 
+  uint32_t firstDirSector = (header[48] | (header[49] << 8) |
+                            (header[50] << 16) | (header[51] << 24));
+  uint32_t firstMiniFatSector = (header[60] | (header[61] << 8) |
+                                (header[62] << 16) | (header[63] << 24));
   uint32_t firstDifatSector = (header[68] | (header[69] << 8) |
                                (header[70] << 16) | (header[71] << 24));
 
@@ -71,10 +75,27 @@ DetectionFinding CheckHwpOleOverlay(FILE *fp, uint64_t fileSize,
   }
 
   uint64_t maxUsedSectorIdx = 0;
+
+  // Include Header Metadata Sector Indexes
+  if (firstDirSector < 0xFFFFFFFCU)
+    maxUsedSectorIdx = std::max(maxUsedSectorIdx, (uint64_t)firstDirSector);
+  if (firstMiniFatSector < 0xFFFFFFFCU)
+    maxUsedSectorIdx = std::max(maxUsedSectorIdx, (uint64_t)firstMiniFatSector);
+  if (firstDifatSector < 0xFFFFFFFCU)
+    maxUsedSectorIdx = std::max(maxUsedSectorIdx, (uint64_t)firstDifatSector);
+
+  for (uint32_t dSec : visitedDifat) {
+    if (dSec < 0xFFFFFFFCU)
+      maxUsedSectorIdx = std::max(maxUsedSectorIdx, (uint64_t)dSec);
+  }
+
   int entriesPerFatSec = (int)(sectorSize / 4);
 
   for (size_t fi = 0; fi < fatSectorNums.size() && fi < 10000; ++fi) {
     uint32_t fatSecNum = fatSectorNums[fi];
+    if (fatSecNum < 0xFFFFFFFCU)
+      maxUsedSectorIdx = std::max(maxUsedSectorIdx, (uint64_t)fatSecNum);
+
     uint64_t off = 512ULL + (uint64_t)fatSecNum * sectorSize;
     if (off + sectorSize > fileSize)
       continue;
@@ -92,6 +113,8 @@ DetectionFinding CheckHwpOleOverlay(FILE *fp, uint64_t fileSize,
         uint64_t globalSecIdx = (uint64_t)fi * entriesPerFatSec + i;
         if (globalSecIdx > maxUsedSectorIdx)
           maxUsedSectorIdx = globalSecIdx;
+        if ((uint64_t)entry > maxUsedSectorIdx)
+          maxUsedSectorIdx = (uint64_t)entry;
       }
     }
   }
@@ -104,23 +127,53 @@ DetectionFinding CheckHwpOleOverlay(FILE *fp, uint64_t fileSize,
   uint64_t logicalEnd = 512ULL + (maxUsedSectorIdx + 1) * (uint64_t)sectorSize;
   outLogicalSize = std::min(logicalEnd, fileSize);
 
-  const uint64_t OVERLAY_THRESHOLD = 16;
-  if (fileSize > outLogicalSize + OVERLAY_THRESHOLD) {
-    uint64_t overlayBytes = fileSize - outLogicalSize;
-    double kb = overlayBytes / 1024.0;
-    char sizeBuf[64];
-    if (kb >= 1024.0) {
-      sprintf_s(sizeBuf, sizeof(sizeBuf), "%.2f MB", kb / 1024.0);
-    } else {
-      sprintf_s(sizeBuf, sizeof(sizeBuf), "%.1f KB", kb);
+  // Check overlay region for non-padding bytes (0x00 and 0xFF)
+  if (fileSize > outLogicalSize) {
+    uint64_t overlayOffset = outLogicalSize;
+    uint64_t remainingBytes = fileSize - overlayOffset;
+
+    bool hasMeaningfulData = false;
+    uint64_t nonPaddingCount = 0;
+
+    const size_t CHUNK_SIZE = 4096;
+    std::vector<uint8_t> chunkBuf(CHUNK_SIZE);
+
+    if (_fseeki64(fp, (long long)overlayOffset, SEEK_SET) == 0) {
+      uint64_t readTotal = 0;
+      while (readTotal < remainingBytes) {
+        size_t toRead = (size_t)std::min((uint64_t)CHUNK_SIZE, remainingBytes - readTotal);
+        size_t bytesRead = fread(chunkBuf.data(), 1, toRead, fp);
+        if (bytesRead == 0) break;
+
+        for (size_t k = 0; k < bytesRead; ++k) {
+          uint8_t b = chunkBuf[k];
+          if (b != 0x00 && b != 0xFF) {
+            nonPaddingCount++;
+            hasMeaningfulData = true;
+          }
+        }
+        readTotal += bytesRead;
+      }
     }
 
-    finding.detected = true;
-    finding.riskLevel = 2; // Danger (Red)
-    finding.ruleType = RULE_TYPE_OVERLAY;
-    finding.title = "오버레이";
-    finding.description =
-        std::string("문서 끝에 ") + sizeBuf + " 크기의 추가 데이터 발견";
+    const uint64_t MIN_OVERLAY_DATA_BYTES = 16;
+    if (hasMeaningfulData && nonPaddingCount >= MIN_OVERLAY_DATA_BYTES) {
+      uint64_t overlayBytes = remainingBytes;
+      double kb = overlayBytes / 1024.0;
+      char sizeBuf[64];
+      if (kb >= 1024.0) {
+        sprintf_s(sizeBuf, sizeof(sizeBuf), "%.2f MB", kb / 1024.0);
+      } else {
+        sprintf_s(sizeBuf, sizeof(sizeBuf), "%.1f KB", kb);
+      }
+
+      finding.detected = true;
+      finding.riskLevel = 2; // Danger (Red)
+      finding.ruleType = RULE_TYPE_OVERLAY;
+      finding.title = "오버레이";
+      finding.description =
+          std::string("문서 끝에 ") + sizeBuf + " 크기의 추가 데이터 발견";
+    }
   }
 
   return finding;
