@@ -17,7 +17,7 @@ namespace WpfApp.Services
     {
         private static readonly HashSet<string> SkipFolders = new(StringComparer.OrdinalIgnoreCase)
         {
-            "$Recycle.Bin", "System Volume Information", "Windows", "Program Files", "Program Files (x86)", "AppData", "ProgramData"
+            "Windows", "Program Files", "Program Files (x86)", "System Volume Information"
         };
 
         private static readonly HashSet<string> TargetExtensions = new(StringComparer.OrdinalIgnoreCase)

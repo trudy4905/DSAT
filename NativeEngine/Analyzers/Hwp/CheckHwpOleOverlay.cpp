@@ -31,9 +31,9 @@ DetectionFinding CheckHwpOleOverlay(FILE *fp, uint64_t fileSize,
     sectorSize = 512;
 
   uint32_t firstDirSector = (header[48] | (header[49] << 8) |
-                            (header[50] << 16) | (header[51] << 24));
+                             (header[50] << 16) | (header[51] << 24));
   uint32_t firstMiniFatSector = (header[60] | (header[61] << 8) |
-                                (header[62] << 16) | (header[63] << 24));
+                                 (header[62] << 16) | (header[63] << 24));
   uint32_t firstDifatSector = (header[68] | (header[69] << 8) |
                                (header[70] << 16) | (header[71] << 24));
 
@@ -49,7 +49,8 @@ DetectionFinding CheckHwpOleOverlay(FILE *fp, uint64_t fileSize,
   int safety = 0;
   std::vector<uint32_t> visitedDifat;
   while (difatSec < 0xFFFFFFFCU && safety++ < 1000) {
-    if (std::find(visitedDifat.begin(), visitedDifat.end(), difatSec) != visitedDifat.end())
+    if (std::find(visitedDifat.begin(), visitedDifat.end(), difatSec) !=
+        visitedDifat.end())
       break;
     visitedDifat.push_back(difatSec);
 
@@ -141,9 +142,11 @@ DetectionFinding CheckHwpOleOverlay(FILE *fp, uint64_t fileSize,
     if (_fseeki64(fp, (long long)overlayOffset, SEEK_SET) == 0) {
       uint64_t readTotal = 0;
       while (readTotal < remainingBytes) {
-        size_t toRead = (size_t)std::min((uint64_t)CHUNK_SIZE, remainingBytes - readTotal);
+        size_t toRead =
+            (size_t)std::min((uint64_t)CHUNK_SIZE, remainingBytes - readTotal);
         size_t bytesRead = fread(chunkBuf.data(), 1, toRead, fp);
-        if (bytesRead == 0) break;
+        if (bytesRead == 0)
+          break;
 
         for (size_t k = 0; k < bytesRead; ++k) {
           uint8_t b = chunkBuf[k];
