@@ -51,22 +51,6 @@ namespace WpfApp.Services
             }
         }
 
-        private static string ConvertDriveToDevicePath(DiskItem disk)
-        {
-            if (!string.IsNullOrEmpty(disk.ImagePath)) return disk.ImagePath;
-            string letter = disk.DriveLetter;
-            if (string.IsNullOrWhiteSpace(letter)) return string.Empty;
-
-            if (letter.StartsWith(@"\\.\", StringComparison.OrdinalIgnoreCase)) return letter;
-
-            string trimmed = letter.TrimEnd('\\', '/');
-            if (trimmed.Length == 2 && trimmed[1] == ':')
-            {
-                return $@"\\.\{trimmed}";
-            }
-            return letter;
-        }
-
         #region Direct Selected Files Scan
         private async Task<List<HwpFileItem>> ScanDirectFilesAsync(
             List<string> filePaths,
@@ -95,8 +79,7 @@ namespace WpfApp.Services
                     FileSizeBytes = file.Length,
                     CreatedTime = file.CreationTime,
                     LastModified = file.LastWriteTime,
-                    TextSnippet = "분석 중...",
-                    IsDeleted = false
+                    TextSnippet = "분석 중..."
                 };
 
                 AnalyzeAndEvaluateFile(item);
@@ -144,18 +127,15 @@ namespace WpfApp.Services
 
                     // statusMsg가 "FILE:" 형식인지 확인
                     string virtualPath = string.Empty;
-                    bool isDeleted = false;
                     if (statusMsg != null && statusMsg.StartsWith("FILE:", StringComparison.Ordinal))
                     {
                         string payload = statusMsg.Substring(5);
                         if (payload.StartsWith("IS_DELETED:1:", StringComparison.Ordinal))
                         {
-                            isDeleted = true;
                             virtualPath = payload.Substring(13);
                         }
                         else if (payload.StartsWith("IS_DELETED:0:", StringComparison.Ordinal))
                         {
-                            isDeleted = false;
                             virtualPath = payload.Substring(13);
                         }
                         else
@@ -199,8 +179,7 @@ namespace WpfApp.Services
                         CreatedTime = cTime == DateTime.MinValue ? DateTime.Now : cTime,
                         LastModified = mTime == DateTime.MinValue ? DateTime.Now : mTime,
                         TextSnippet = "분석 중...",
-                        VirtualPath = virtualPath.Length > 0 ? virtualPath : string.Empty,
-                        IsDeleted = isDeleted
+                        VirtualPath = virtualPath.Length > 0 ? virtualPath : string.Empty
                     };
 
                     // 실제 temp 경로로 문서 오버레이 및 악성 여부 분석 수행

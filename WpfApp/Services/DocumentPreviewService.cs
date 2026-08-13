@@ -26,8 +26,6 @@ namespace WpfApp.Services
             new PdfDocumentPreviewReader()
         };
 
-        private static readonly VirtualImagePreviewReader VirtualImageReader = new();
-
         public static async Task<DocumentPreviewResult> ExtractTextAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -37,11 +35,6 @@ namespace WpfApp.Services
                     Success = false,
                     ErrorMessage = "파일 경로가 올바르지 않습니다."
                 };
-            }
-
-            if (VirtualImageReader.CanReadPath(filePath))
-            {
-                return await VirtualImageReader.ExtractTextAsync(filePath);
             }
 
             if (!File.Exists(filePath))

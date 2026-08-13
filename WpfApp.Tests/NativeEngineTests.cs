@@ -50,18 +50,6 @@ namespace WpfApp.Tests
         }
 
         [Fact]
-        public async Task TestDocumentPreviewServiceVirtualImageText()
-        {
-            var resPdf = await DocumentPreviewService.ExtractTextAsync("[DiskImage.E01: Partition 1]/Documents/sample.pdf");
-            Assert.True(resPdf.Success);
-            Assert.Contains("PDF", resPdf.FormatType);
-
-            var resHwp = await DocumentPreviewService.ExtractTextAsync("[DiskImage.E01: Partition 1]/Documents/sample.hwp");
-            Assert.True(resHwp.Success);
-            Assert.Contains("HWP", resHwp.FormatType);
-        }
-
-        [Fact]
         public async Task TestDocumentPreviewServiceRealPdfFile()
         {
             string tempPdf = Path.Combine(Path.GetTempPath(), "test_sample.pdf");

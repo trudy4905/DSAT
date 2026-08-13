@@ -43,26 +43,6 @@ namespace WpfApp.Models
         public DateTime CreatedTime { get; set; } = DateTime.Now;
         public DateTime LastModified { get; set; }
 
-        private bool _isDeleted = false;
-
-        public bool IsDeleted
-        {
-            get => _isDeleted;
-            set
-            {
-                if (_isDeleted != value)
-                {
-                    _isDeleted = value;
-                    OnPropertyChanged();
-                    OnPropertyChanged(nameof(IsDeletedDisplay));
-                    OnPropertyChanged(nameof(IsDeletedBadgeColor));
-                }
-            }
-        }
-
-        public string IsDeletedDisplay => IsDeleted ? "Yes" : "No";
-        public string IsDeletedBadgeColor => IsDeleted ? "#DC2626" : "#64748B";
-
         public bool IsPdf => Extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase);
         public bool IsHwpx => Extension.Equals(".hwpx", StringComparison.OrdinalIgnoreCase);
         public string FileTypeBadge => IsPdf ? "PDF" : (IsHwpx ? "HWPX" : "HWP");

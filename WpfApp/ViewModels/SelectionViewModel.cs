@@ -43,8 +43,6 @@ namespace WpfApp.ViewModels
                 }
             });
 
-            AddImageCardCommand = new RelayCommand(_ => AddImageFile());
-
             RefreshDisksCommand = new RelayCommand(_ => LoadDisks());
 
             AddFilesCommand = new RelayCommand(_ => AddFiles());
@@ -87,7 +85,6 @@ namespace WpfApp.ViewModels
         #region Commands
         public ICommand SelectSidebarTabCommand { get; }
         public ICommand SelectDiskCardCommand { get; }
-        public ICommand AddImageCardCommand { get; }
         public ICommand RefreshDisksCommand { get; }
         public ICommand GoToNextStepCommand { get; }
         public ICommand AddFilesCommand { get; }
@@ -302,8 +299,8 @@ namespace WpfApp.ViewModels
         {
             var openFileDialog = new OpenFileDialog
             {
-                Title = "포렌식 이미지 파일 선택 (E01, DD)",
-                Filter = "포렌식 디스크 이미지 (*.E01;*.Ex01;*.raw;*.dd;*.001)|*.E01;*.Ex01;*.raw;*.dd;*.001|EnCase 이미지 (*.E01;*.Ex01)|*.E01;*.Ex01|RAW/DD 이미지 (*.raw;*.dd;*.001)|*.raw;*.dd;*.001|모든 파일 (*.*)|*.*",
+                Title = "이미지 파일 선택 (E01, DD)",
+                Filter = "이미지 파일 (*.E01;*.Ex01;*.dd;*.001)|*.E01;*.Ex01;*.dd;*.001|EnCase 이미지 (*.E01;*.Ex01)|*.E01;*.Ex01|DD 이미지 (*.dd;*.001)|*.dd;*.001|모든 파일 (*.*)|*.*",
                 Multiselect = false
             };
 
@@ -315,7 +312,7 @@ namespace WpfApp.ViewModels
                 if (!inspection.IsValidSupportedImage)
                 {
                     MessageBox.Show(
-                        $"선택한 이미지 파일 [{Path.GetFileName(selectedPath)}]에서 인식 가능한 파일시스템(NTFS, FAT, exFAT, EXT)을 가진 파티션을 찾을 수 없습니다.\n\n[원인] {inspection.ErrorMessage}",
+                        $"선택한 이미지 파일 [{Path.GetFileName(selectedPath)}]에서 인식 가능한 파일시스템(NTFS, FAT, exFAT, EXT)을 가진 파티션을 찾을 수 없습니다.\n\n {inspection.ErrorMessage}",
                         "지원되지 않는 파일시스템",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);

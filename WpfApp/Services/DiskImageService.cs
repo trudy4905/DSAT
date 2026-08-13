@@ -11,7 +11,7 @@ namespace WpfApp.Services
     {
         private static readonly HashSet<string> StandardExtensions = new(StringComparer.OrdinalIgnoreCase)
         {
-            ".e01", ".ex01", ".raw", ".dd", ".001"
+            ".e01", ".ex01", ".dd", ".001"
         };
 
         public static bool IsSupportedImageExtension(string filePath)
@@ -51,7 +51,7 @@ namespace WpfApp.Services
                 return new ImageInspectionResult
                 {
                     IsValidSupportedImage = false,
-                    ErrorMessage = $"지원하지 않는 이미지 확장자입니다 ({ext}). (E01 및 DD/RAW 포렌식 이미지 파일만 지원)"
+                    ErrorMessage = $"지원하지 않는 이미지 확장자입니다 ({ext}). (E01 및 DD 이미지 파일만 지원)"
                 };
             }
 
