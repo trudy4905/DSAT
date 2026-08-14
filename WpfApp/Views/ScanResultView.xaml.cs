@@ -1,8 +1,8 @@
 using System;
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using WpfApp.Services;
 using WpfApp.ViewModels;
 
 namespace WpfApp.Views
@@ -49,13 +49,34 @@ namespace WpfApp.Views
 
             try
             {
-                await MainWebView.EnsureCoreWebView2Async();
+                if (MainWebView.CoreWebView2 == null)
+                {
+                    // 실행 파일이 위치한 경로(USB) 내 DSAT_Temp\WebView2_Cache 생성 시도
+                    string exeDir = AppContext.BaseDirectory;
+                    string usbTempDir = Path.Combine(exeDir, "DSAT_Temp");
+                    string userDataFolder = Path.Combine(usbTempDir, "WebView2_Cache");
 
-                // Security Lockdown: Disable scripts, host objects, and dialogs
-                MainWebView.CoreWebView2.Settings.IsScriptEnabled = false;
-                MainWebView.CoreWebView2.Settings.AreHostObjectsAllowed = false;
-                MainWebView.CoreWebView2.Settings.IsWebMessageEnabled = false;
-                MainWebView.CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
+                    try
+                    {
+                        Directory.CreateDirectory(userDataFolder);
+                    }
+                    catch (Exception ex) when (ex is UnauthorizedAccessException || ex is IOException)
+                    {
+                        _currentViewModel.SetPreviewError("USB 드라이브에 쓰기 권한이 없습니다. (보안 매체 / USB 쓰기 금지 환경)\n\n실행 파일 경로에 임시 폴더(DSAT_Temp)를 생성할 수 없어 미리보기를 불러올 수 없습니다.");
+                        return;
+                    }
+
+                    var environment = await Microsoft.Web.WebView2.Core.CoreWebView2Environment.CreateAsync(null, userDataFolder);
+                    await MainWebView.EnsureCoreWebView2Async(environment);
+
+                    if (MainWebView.CoreWebView2?.Settings != null)
+                    {
+                        MainWebView.CoreWebView2.Settings.IsScriptEnabled = false;
+                        MainWebView.CoreWebView2.Settings.AreHostObjectsAllowed = false;
+                        MainWebView.CoreWebView2.Settings.IsWebMessageEnabled = false;
+                        MainWebView.CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
+                    }
+                }
 
                 if (_currentViewModel.IsPdfPreview && _currentViewModel.PreviewUri != null)
                 {
@@ -72,7 +93,7 @@ namespace WpfApp.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"WebView2 Error: {ex.Message}");
+                _currentViewModel.SetPreviewError($"미리보기 로드 실패 (USB 쓰기 권한 제한 또는 브라우저 오류): {ex.Message}");
             }
         }
 

@@ -41,10 +41,29 @@ namespace WpfApp.Services
             return (string.Empty, string.Empty);
         }
 
+        /// <summary>
+        /// 현재 애플리케이션(WpfApp.exe)이 실행되고 있는 드라이브 루트(예: "E:\")를 반환합니다.
+        /// 현장용 USB에서 실행 시 본인 USB 드라이브를 디스크 스캔 목록에서 자동 제외하는 용도입니다.
+        /// </summary>
+        public static string GetExecutionDriveRoot()
+        {
+            try
+            {
+                string execPath = Environment.ProcessPath
+                    ?? AppContext.BaseDirectory;
+                return Path.GetPathRoot(execPath) ?? string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
         public static List<DiskItem> GetAvailableDisks()
         {
             var diskList = new List<DiskItem>();
             int displayIndex = 0;
+            string execDriveRoot = GetExecutionDriveRoot();
 
             try
             {
@@ -55,6 +74,13 @@ namespace WpfApp.Services
                     try
                     {
                         if (!drive.IsReady) continue;
+
+                        // 본인 프로그램이 실행 중인 USB 드라이브는 현장 포렌식 무흔적(Self-Exclusion) 원칙에 따라 스킵
+                        if (!string.IsNullOrEmpty(execDriveRoot) &&
+                            string.Equals(drive.Name, execDriveRoot, StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
 
                         string driveLetterTrimmed = drive.Name.TrimEnd('\\');
                         bool   isExternal         = drive.DriveType == DriveType.Removable || drive.DriveType == DriveType.Network;

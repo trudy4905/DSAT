@@ -215,6 +215,14 @@ namespace WpfApp.Services
         {
             var resultList = new List<HwpFileItem>();
             var dirQueue = new Queue<string>();
+            string execDriveRoot = DiskService.GetExecutionDriveRoot();
+
+            if (!string.IsNullOrEmpty(execDriveRoot) &&
+                startDirectory.StartsWith(execDriveRoot, StringComparison.OrdinalIgnoreCase))
+            {
+                // 본인 USB 실행 드라이브 스캔 차단 (현장용 무흔적 원칙)
+                return resultList;
+            }
 
             if (Directory.Exists(startDirectory))
             {
@@ -276,7 +284,8 @@ namespace WpfApp.Services
                         if (cancellationToken.IsCancellationRequested) break;
 
                         if ((subDir.Attributes & FileAttributes.ReparsePoint) != 0 ||
-                            SkipFolders.Contains(subDir.Name))
+                            SkipFolders.Contains(subDir.Name) ||
+                            (!string.IsNullOrEmpty(execDriveRoot) && subDir.FullName.StartsWith(execDriveRoot, StringComparison.OrdinalIgnoreCase)))
                         {
                             continue;
                         }

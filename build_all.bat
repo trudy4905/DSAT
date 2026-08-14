@@ -21,8 +21,8 @@ echo ===================================================
 echo  WPF (UI) + C++ DLL (Engine) Incremental Build [%CONFIG% / %MODE%]
 echo ===================================================
 
-echo [1/2] Building Native C++ Engine DLL...
-call NativeEngine\build_dll.bat
+echo [1/2] Building Native C++ Engine DLL (%CONFIG% Configuration)...
+call NativeEngine\build_dll.bat %CONFIG%
 cd /d "%ROOT_DIR%"
 
 if %ERRORLEVEL% NEQ 0 (
@@ -38,11 +38,22 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 
+if /i "%CONFIG%"=="Release" (
+    echo.
+    echo [2.5/3] Publishing Standalone Single-File Portable Package for Release...
+    dotnet publish WpfApp\WpfApp.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o publish_singlefile
+    powershell -NoProfile -Command "Copy-Item NativeEngine\bin\*.dll publish_singlefile\ -Force; Remove-Item publish_singlefile\*.pdb, publish_singlefile\*.xml -Force -ErrorAction SilentlyContinue" >nul 2>&1
+)
+
 if /i "%MODE%"=="Fast" (
     echo.
     echo ===================================================
     echo  SUCCESS: Fast incremental build ready for F5 debugging!
-    echo  Executable: WpfApp\bin\x64\%CONFIG%\net10.0-windows\WpfApp.exe
+    if /i "%CONFIG%"=="Release" (
+        echo  Portable Single-File Release Output: publish_singlefile\WpfApp.exe
+    ) else (
+        echo  Executable: WpfApp\bin\x64\%CONFIG%\net10.0-windows\WpfApp.exe
+    )
     echo ===================================================
     exit /b 0
 )
@@ -58,5 +69,9 @@ if %ERRORLEVEL% NEQ 0 (
 echo.
 echo ===================================================
 echo  SUCCESS: All components compiled and tested!
-echo  Executable: WpfApp\bin\x64\%CONFIG%\net10.0-windows\WpfApp.exe
+if /i "%CONFIG%"=="Release" (
+    echo  Portable Single-File Release Output: publish_singlefile\WpfApp.exe
+) else (
+    echo  Executable: WpfApp\bin\x64\%CONFIG%\net10.0-windows\WpfApp.exe
+)
 echo ===================================================

@@ -194,7 +194,7 @@ namespace WpfApp.Services
                         string path1 = Path.Combine(baseDir, DllName);
                         if (File.Exists(path1)) return NativeLibrary.Load(path1);
 
-                        string asmDir = Path.GetDirectoryName(assembly.Location) ?? string.Empty;
+                        string asmDir = AppContext.BaseDirectory;
                         string path2 = Path.Combine(asmDir, DllName);
                         if (!string.IsNullOrEmpty(asmDir) && File.Exists(path2)) return NativeLibrary.Load(path2);
 

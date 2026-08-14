@@ -13,3 +13,8 @@ obj/
 *.exp
 *.pdb
 NativeEngine/NativeEngine.dll
+
+# Release Output & Temp Folders
+publish_singlefile/
+DSAT_Temp/
+

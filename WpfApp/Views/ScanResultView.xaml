@@ -453,11 +453,22 @@
                         <Button Content="📄 파일 열기" Command="{Binding OpenFileCommand}" Style="{StaticResource DessFooterBtn}" Padding="14,4" Margin="0"/>
                     </StackPanel>
 
-                    <!-- 4. Unified Full-Height WebView2 Document Viewer Component -->
-                    <Border Grid.Row="3" Background="#F8FAFC" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1" Padding="8">
+                    <!-- 4. Full-Height WebView2 Document Viewer Component (Executable USB Folder Temp) -->
+                    <Border Grid.Row="3" Background="#FFFFFF" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1" Padding="8">
                         <Grid>
-                            <!-- Unified WebView2 Document Viewer (PDF native & HWP/HWPX A4 Paper HTML) -->
+                            <!-- Unified WebView2 Document Viewer -->
                             <wv2:WebView2 x:Name="MainWebView"/>
+
+                            <!-- USB Write Permission Error / DLP Warning Overlay -->
+                            <Border Background="#F8FAFC" Visibility="{Binding IsPreviewError, Converter={StaticResource BoolToVisConverter}}" CornerRadius="6" Padding="20">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Border Width="60" Height="60" CornerRadius="30" Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="2" HorizontalAlignment="Center" Margin="0,0,0,14">
+                                        <TextBlock Text="🔒" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="쓰기 권한 없음 (USB 쓰기 금지)" FontSize="16" FontWeight="Bold" Foreground="#991B1B" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                    <TextBlock Text="{Binding PreviewErrorMessage}" FontSize="12" Foreground="#64748B" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="380"/>
+                                </StackPanel>
+                            </Border>
 
                             <!-- Loading Indicator Overlay -->
                             <Border Background="#E0FFFFFF" Visibility="{Binding IsPreviewLoading, Converter={StaticResource BoolToVisConverter}}" CornerRadius="6">

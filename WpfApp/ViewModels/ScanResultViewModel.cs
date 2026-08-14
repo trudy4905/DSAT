@@ -93,17 +93,26 @@ namespace WpfApp.ViewModels
                 if (!File.Exists(openPath)) return;
                 try
                 {
-                    // Create safe temp directory for forensic replica viewing
-                    string tempDir = Path.Combine(Path.GetTempPath(), "DSAT_SafeReplica");
-                    Directory.CreateDirectory(tempDir);
+                    // 실행 파일이 위치한 경로(USB) 내 DSAT_Temp 임시 폴더 이용
+                    string exeDir = AppContext.BaseDirectory;
+                    string tempDir = Path.Combine(exeDir, "DSAT_Temp");
+
+                    try
+                    {
+                        Directory.CreateDirectory(tempDir);
+                    }
+                    catch (Exception ex) when (ex is UnauthorizedAccessException || ex is IOException)
+                    {
+                        MessageBox.Show("USB 드라이브에 쓰기 권한이 없습니다. (보안 매체 / USB 쓰기 금지 환경)\n\n실행 파일 경로에 임시 폴더를 생성할 수 없어 파일 열기를 진행할 수 없습니다.",
+                            "쓰기 권한 오류", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
 
                     string safeFileName = $"SafeCopy_{Guid.NewGuid().ToString("N")[..8]}_{Path.GetFileName(openPath)}";
                     string tempCopyPath = Path.Combine(tempDir, safeFileName);
 
-                    // Copy original file to temp directory (Preserves original evidence metadata)
+                    // 원본 무결성 보존을 위해 임시 복사본 생성 후 읽기 전용 설정
                     File.Copy(openPath, tempCopyPath, overwrite: true);
-
-                    // Set ReadOnly attribute on temp copy
                     File.SetAttributes(tempCopyPath, FileAttributes.ReadOnly);
 
                     Process.Start(new ProcessStartInfo
@@ -491,6 +500,27 @@ namespace WpfApp.ViewModels
             }
         }
 
+        private bool _isPreviewError;
+        public bool IsPreviewError
+        {
+            get => _isPreviewError;
+            set { SetProperty(ref _isPreviewError, value); }
+        }
+
+        private string _previewErrorMessage = string.Empty;
+        public string PreviewErrorMessage
+        {
+            get => _previewErrorMessage;
+            set { SetProperty(ref _previewErrorMessage, value); }
+        }
+
+        public void SetPreviewError(string message)
+        {
+            PreviewErrorMessage = message;
+            IsPreviewError = true;
+            IsPreviewLoading = false;
+        }
+
         public bool IsPreviewLoading
         {
             get => _isPreviewLoading;
@@ -553,6 +583,7 @@ namespace WpfApp.ViewModels
 
         private async Task LoadFilePreviewAsync(HwpFileItem fileItem)
         {
+            IsPreviewError = false;
             IsPreviewLoading = true;
             PreviewTitle = fileItem.FileName;
             PreviewFilePath = fileItem.FilePath;
